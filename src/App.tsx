@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, FileText, Trash2, Copy, Sparkles, CheckCircle } from 'lucide-react';
 import './App.css';
-import { TranscriptionMessage, AISummary, ConnectionStatus, SummaryType, DeepgramFeatures } from './types';
+import { TranscriptionMessage, AISummary, ConnectionStatus, SummaryType } from './types';
 
 /**
- * Main App Component
- * This is the heart of our AI Note Taker application
+ * Simple AI Note Taker Desktop App
+ * Clean and minimal interface for transcription and AI summaries
  */
 function App() {
-  // State Management with TypeScript - Enhanced for new features
-  // Each state variable has a specific type, which helps prevent bugs
-  
+  // Basic state management
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [transcription, setTranscription] = useState<string>('');
   const [interimText, setInterimText] = useState<string>('');
@@ -20,19 +18,12 @@ function App() {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState<boolean>(false);
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
 
-  // 🆕 NEW: Enhanced features state
-  const [currentSpeaker, setCurrentSpeaker] = useState<number | undefined>(undefined);
-  const [featuresStatus, setFeaturesStatus] = useState<DeepgramFeatures | undefined>(undefined);
-  const [speakerCount, setSpeakerCount] = useState<number>(0);
-  const [lastMessage, setLastMessage] = useState<TranscriptionMessage | null>(null);
-
-  // Refs for persistent objects
-  // These don't cause re-renders when they change, but persist between renders
+  // Refs for audio handling
   const websocketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
 
-  // Cleanup on component unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopRecording();
@@ -42,10 +33,7 @@ function App() {
     };
   }, []);
 
-  /**
-   * Connect to WebSocket backend
-   * Returns a Promise - this is an asynchronous operation
-   */
+  // Simple WebSocket connection
   const connectWebSocket = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       try {
@@ -54,7 +42,6 @@ function App() {
         websocketRef.current = ws;
 
         ws.onopen = () => {
-          console.log('WebSocket connected');
           setConnectionStatus('Connected');
           setError('');
           resolve();
@@ -62,68 +49,36 @@ function App() {
 
         ws.onmessage = (event) => {
           try {
-            // Parse JSON message with TypeScript type checking
             const data: TranscriptionMessage = JSON.parse(event.data);
-            setLastMessage(data); // Store the latest message
             
-            switch (data.type) {
-              case 'transcription':
-                if (data.text) {
-                  // 🆕 NEW: Handle enhanced features
-                  if (data.speaker !== undefined) {
-                    setCurrentSpeaker(data.speaker);
-                    setSpeakerCount(prev => Math.max(prev, (data.speaker ?? 0) + 1));
-                  }
-                  
-                  if (data.features_used) {
-                    setFeaturesStatus(data.features_used);
-                    setConnectionStatus('Enhanced Features Active');
-                  }
-                  
-                  if (data.is_final) {
-                    // Final result - add to main transcription
-                    setTranscription(data.full_transcript || '');
-                    setInterimText('');
-                  } else {
-                    // Interim result - show as temporary text
-                    setInterimText(data.text);
-                  }
-                }
-                break;
-              
-              case 'connection_opened':
-                setConnectionStatus('Connected to Deepgram');
-                break;
-              
-              case 'connection_closed':
-                setConnectionStatus('Disconnected');
-                break;
-              
-              case 'error':
-                setError(data.message || 'Unknown error occurred');
-                setConnectionStatus('Connection Error');
-                break;
+            if (data.type === 'transcription' && data.text) {
+              if (data.is_final) {
+                setTranscription(data.full_transcript || '');
+                setInterimText('');
+              } else {
+                setInterimText(data.text);
+              }
+            } else if (data.type === 'error') {
+              setError(data.message || 'Unknown error occurred');
+              setConnectionStatus('Connection Error');
             }
           } catch (err) {
             console.error('Error parsing message:', err);
           }
         };
 
-        ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
+        ws.onerror = () => {
           setError('Connection error occurred');
           setConnectionStatus('Connection Error');
-          reject(error);
+          reject();
         };
 
         ws.onclose = () => {
-          console.log('WebSocket disconnected');
           setConnectionStatus('Disconnected');
           websocketRef.current = null;
         };
 
       } catch (error) {
-        console.error('Failed to create WebSocket:', error);
         setError('Failed to create connection');
         setConnectionStatus('Connection Error');
         reject(error);
@@ -131,120 +86,75 @@ function App() {
     });
   };
 
-  /**
-   * Start recording audio and transcription
-   */
+  // Start recording
   const startRecording = async () => {
     try {
       setError('');
-      
-      // Connect to backend
       await connectWebSocket();
       
-      // First, enumerate audio devices to find BlackHole
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      console.log('Available audio devices:', devices.filter(device => device.kind === 'audioinput'));
-      
-      // Look for BlackHole device
-      const blackHoleDevice = devices.find(device => 
-        device.kind === 'audioinput' && 
-        (device.label.includes('BlackHole') || device.label.includes('blackhole'))
-      );
-      
-      console.log('BlackHole device found:', blackHoleDevice);
-      
-      // Request microphone access with specific device if found
-      const constraints: MediaStreamConstraints = {
-        audio: blackHoleDevice ? {
-          deviceId: { exact: blackHoleDevice.deviceId },
-          sampleRate: 16000,
-          channelCount: 1,
-          echoCancellation: false,  // Disable for system audio
-          noiseSuppression: false,  // Disable for system audio
-        } : {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
           sampleRate: 16000,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
         }
-      };
-      
-      console.log('Using audio constraints:', constraints);
-      
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('Audio stream obtained:', stream.getAudioTracks()[0].getSettings());
+      });
       
       audioStreamRef.current = stream;
 
-      // Create MediaRecorder
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus',
       });
       
       mediaRecorderRef.current = mediaRecorder;
 
-      // Handle audio data
       mediaRecorder.ondataavailable = (event) => {
-        console.log('Audio data available, size:', event.data.size);
         if (event.data.size > 0 && websocketRef.current?.readyState === WebSocket.OPEN) {
           websocketRef.current.send(event.data);
         }
       };
 
-      // Start recording
-      mediaRecorder.start(100); // Send data every 100ms
+      mediaRecorder.start(100);
       setIsRecording(true);
       
     } catch (error) {
       console.error('Error starting recording:', error);
       setError('Failed to start recording. Please check microphone permissions.');
-      setConnectionStatus('Connection Error');
     }
   };
 
-  /**
-   * Stop recording and cleanup
-   */
+  // Stop recording
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+    if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
+      setIsRecording(false);
     }
-    
+
     if (audioStreamRef.current) {
       audioStreamRef.current.getTracks().forEach(track => track.stop());
       audioStreamRef.current = null;
     }
-    
+
     if (websocketRef.current) {
       websocketRef.current.close();
       websocketRef.current = null;
     }
-    
-    setIsRecording(false);
-    setConnectionStatus('Disconnected');
-    setInterimText('');
   };
 
-  /**
-   * Generate AI summary using Gemini
-   */
+  // Generate AI Summary
   const generateSummary = async (summaryType: SummaryType = 'meeting') => {
-    if (!transcription.trim()) {
-      setError('No transcription available to summarize');
-      return;
-    }
-
-    setIsGeneratingSummary(true);
-    setError('');
+    if (!transcription.trim()) return;
 
     try {
-      const response = await fetch('http://localhost:8000/api/summarize', {
+      setIsGeneratingSummary(true);
+      setError('');
+
+      const response = await fetch('http://localhost:8000/generate-summary', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: transcription,
+          transcription: transcription,
           summary_type: summaryType
         }),
       });
@@ -253,107 +163,62 @@ function App() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const summary: AISummary = await response.json();
-      setAiSummary(summary);
+      const data: AISummary = await response.json();
+      setAiSummary(data);
 
     } catch (error) {
       console.error('Error generating summary:', error);
-      setError('Failed to generate AI summary. Please try again.');
+      setError('Failed to generate summary. Please check your connection.');
+      setAiSummary({ error: 'Failed to generate summary. Please try again.' });
     } finally {
       setIsGeneratingSummary(false);
     }
   };
 
-  /**
-   * Clear all content
-   */
+  // Clear all data
   const clearAll = () => {
     setTranscription('');
     setInterimText('');
     setAiSummary(null);
     setError('');
-    setCopySuccess(false);
-    
-    // 🆕 NEW: Clear enhanced features state
-    setCurrentSpeaker(undefined);
-    setFeaturesStatus(undefined);
-    setSpeakerCount(0);
-    setLastMessage(null);
   };
 
-  /**
-   * Copy text to clipboard
-   */
+  // Copy to clipboard
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
-      console.error('Failed to copy text:', error);
+      console.error('Failed to copy to clipboard:', error);
       setError('Failed to copy to clipboard');
     }
   };
 
   return (
     <div className="app">
-      {/* Header */}
+      {/* Simple Header */}
       <header className="header">
-        <div className="header-content">
-          <h1>🤖 AI Note Taker</h1>
-          <p>Real-time transcription powered by Deepgram + AI summaries by Gemini</p>
-        </div>
+        <h1>🎤 AI Note Taker</h1>
+        <p>Simple transcription and AI summaries</p>
       </header>
 
       <main className="main">
-        {/* Status Section */}
+        {/* Status */}
         <div className="status-section">
           <div className={`status-indicator ${connectionStatus.includes('Connected') ? 'connected' : 'disconnected'}`}>
             <div className="status-dot"></div>
             <span>{connectionStatus}</span>
           </div>
           
-          {/* 🆕 NEW: Enhanced Features Status */}
-          {featuresStatus && (
-            <div className="features-status">
-              <h4>🚀 Enhanced Features Active</h4>
-              <div className="feature-badges">
-                {featuresStatus.diarization && (
-                  <span className="feature-badge">🎤 Speaker ID</span>
-                )}
-                {featuresStatus.redaction && (
-                  <span className="feature-badge">🔒 Privacy Protection</span>
-                )}
-                {featuresStatus.paragraphs && (
-                  <span className="feature-badge">📝 Smart Paragraphs</span>
-                )}
-                {featuresStatus.punctuation && (
-                  <span className="feature-badge">✏️ Auto Punctuation</span>
-                )}
-                {featuresStatus.smart_format && (
-                  <span className="feature-badge">🤖 Smart Format</span>
-                )}
-              </div>
-              
-              {currentSpeaker !== undefined && (
-                <div className="speaker-info">
-                  <span className="current-speaker">
-                    👤 Current Speaker: {currentSpeaker} 
-                    {speakerCount > 1 && ` (${speakerCount} speakers detected)`}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-          
           {error && (
             <div className="error-message">
-              ⚠️ {error}
+              {error}
             </div>
           )}
         </div>
 
-        {/* Controls */}
+        {/* Simple Controls */}
         <div className="controls">
           <button
             className={`btn btn-primary ${isRecording ? 'recording' : ''}`}
@@ -362,12 +227,12 @@ function App() {
           >
             {isRecording ? (
               <>
-                <MicOff size={20} />
+                <MicOff size={16} />
                 Stop Recording
               </>
             ) : (
               <>
-                <Mic size={20} />
+                <Mic size={16} />
                 Start Recording
               </>
             )}
@@ -378,7 +243,7 @@ function App() {
             onClick={() => generateSummary('meeting')}
             disabled={!transcription.trim() || isGeneratingSummary}
           >
-            <Sparkles size={20} />
+            <Sparkles size={16} />
             {isGeneratingSummary ? 'Generating...' : 'AI Summary'}
           </button>
 
@@ -387,25 +252,27 @@ function App() {
             onClick={clearAll}
             disabled={!transcription && !aiSummary}
           >
-            <Trash2 size={20} />
+            <Trash2 size={16} />
             Clear All
           </button>
         </div>
 
-        {/* Content Grid */}
+        {/* Content */}
         <div className="content-grid">
-          {/* Transcription Panel */}
+          {/* Transcription */}
           <div className="panel">
             <div className="panel-header">
-              <FileText size={20} />
-              <h2>Live Transcription</h2>
+              <h2>
+                <FileText size={16} />
+                Transcription
+              </h2>
               {transcription && (
                 <button
-                  className="copy-btn"
+                  className={`copy-btn ${copySuccess ? 'success' : ''}`}
                   onClick={() => copyToClipboard(transcription)}
-                  title="Copy transcription"
                 >
-                  {copySuccess ? <CheckCircle size={16} /> : <Copy size={16} />}
+                  {copySuccess ? <CheckCircle size={12} /> : <Copy size={12} />}
+                  {copySuccess ? 'Copied!' : 'Copy'}
                 </button>
               )}
             </div>
@@ -421,24 +288,27 @@ function App() {
               
               {!transcription && !interimText && (
                 <div className="placeholder">
-                  Click "Start Recording" and begin speaking...
+                  <Mic size={32} />
+                  <p>Click "Start Recording" to begin</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* AI Summary Panel */}
+          {/* AI Summary */}
           <div className="panel">
             <div className="panel-header">
-              <Sparkles size={20} />
-              <h2>AI Summary</h2>
+              <h2>
+                <Sparkles size={16} />
+                AI Summary
+              </h2>
               {aiSummary && !aiSummary.error && (
                 <button
-                  className="copy-btn"
+                  className={`copy-btn ${copySuccess ? 'success' : ''}`}
                   onClick={() => copyToClipboard(JSON.stringify(aiSummary, null, 2))}
-                  title="Copy summary"
                 >
-                  {copySuccess ? <CheckCircle size={16} /> : <Copy size={16} />}
+                  {copySuccess ? <CheckCircle size={12} /> : <Copy size={12} />}
+                  {copySuccess ? 'Copied!' : 'Copy'}
                 </button>
               )}
             </div>
@@ -455,20 +325,20 @@ function App() {
                 <div className="summary-content">
                   {aiSummary.error ? (
                     <div className="error">
-                      <p>❌ {aiSummary.error}</p>
+                      <p>{aiSummary.error}</p>
                     </div>
                   ) : (
                     <>
                       {aiSummary.summary && (
                         <div className="summary-section">
-                          <h3>📝 Summary</h3>
+                          <h3>Summary</h3>
                           <p>{aiSummary.summary}</p>
                         </div>
                       )}
 
                       {aiSummary.key_points && aiSummary.key_points.length > 0 && (
                         <div className="summary-section">
-                          <h3>🔑 Key Points</h3>
+                          <h3>Key Points</h3>
                           <ul>
                             {aiSummary.key_points.map((point, index) => (
                               <li key={index}>{point}</li>
@@ -479,7 +349,7 @@ function App() {
 
                       {aiSummary.action_items && aiSummary.action_items.length > 0 && (
                         <div className="summary-section">
-                          <h3>✅ Action Items</h3>
+                          <h3>Action Items</h3>
                           <ul>
                             {aiSummary.action_items.map((item, index) => (
                               <li key={index}>
@@ -495,28 +365,6 @@ function App() {
                           </ul>
                         </div>
                       )}
-
-                      {aiSummary.decisions && aiSummary.decisions.length > 0 && (
-                        <div className="summary-section">
-                          <h3>🎯 Decisions</h3>
-                          <ul>
-                            {aiSummary.decisions.map((decision, index) => (
-                              <li key={index}>{decision}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {aiSummary.next_steps && aiSummary.next_steps.length > 0 && (
-                        <div className="summary-section">
-                          <h3>🚀 Next Steps</h3>
-                          <ul>
-                            {aiSummary.next_steps.map((step, index) => (
-                              <li key={index}>{step}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
                     </>
                   )}
                 </div>
@@ -524,7 +372,8 @@ function App() {
 
               {!aiSummary && !isGeneratingSummary && (
                 <div className="placeholder">
-                  Record some audio and click "AI Summary" to get intelligent insights...
+                  <Sparkles size={32} />
+                  <p>Record audio and click "AI Summary"</p>
                 </div>
               )}
             </div>
@@ -533,30 +382,21 @@ function App() {
 
         {/* Quick Actions */}
         <div className="quick-actions">
-          <h3>Quick AI Actions</h3>
+          <h3>Quick Actions</h3>
           <div className="action-buttons">
             <button
               className="btn btn-small"
               onClick={() => generateSummary('action_items')}
               disabled={!transcription.trim() || isGeneratingSummary}
             >
-              Extract Action Items
+              Action Items
             </button>
             <button
               className="btn btn-small"
               onClick={() => generateSummary('key_points')}
               disabled={!transcription.trim() || isGeneratingSummary}
             >
-              Get Key Points
-            </button>
-            {/* 🆕 NEW: Speaker Analysis button */}
-            <button
-              className="btn btn-small"
-              onClick={() => generateSummary('speaker_analysis')}
-              disabled={!transcription.trim() || isGeneratingSummary || speakerCount < 2}
-              title={speakerCount < 2 ? "Speaker analysis requires multiple speakers" : "Analyze by speaker"}
-            >
-              👥 Speaker Analysis
+              Key Points
             </button>
           </div>
         </div>
