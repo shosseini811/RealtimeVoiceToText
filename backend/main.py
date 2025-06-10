@@ -6,10 +6,28 @@ import websockets
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from deepgram import DeepgramClient, DeepgramClientOptions, LiveTranscriptionEvents
-from deepgram.clients.live.v1 import LiveOptions
+from deepgram import DeepgramClient, PrerecordedOptions, LiveTranscriptionEvents, LiveOptions, ClientOptionsFromEnv
 from dotenv import load_dotenv
 import google.generativeai as genai
+import ssl
+import certifi
+import queue
+import threading
+
+# Enhanced SSL certificate setup for macOS
+def setup_ssl():
+    """Setup SSL certificates for macOS"""
+    cert_file = certifi.where()
+    os.environ['SSL_CERT_FILE'] = cert_file
+    os.environ['REQUESTS_CA_BUNDLE'] = cert_file
+    os.environ['CURL_CA_BUNDLE'] = cert_file
+    
+    # Create SSL context for better compatibility
+    ssl_context = ssl.create_default_context(cafile=cert_file)
+    return ssl_context
+
+# Call SSL setup
+setup_ssl()
 
 # Load environment variables
 load_dotenv()
@@ -17,10 +35,10 @@ load_dotenv()
 # Create FastAPI app
 app = FastAPI(title="AI Note Taker API", description="Real-time transcription with AI-powered summaries")
 
-# Add CORS middleware
+# Add CORS middleware - Updated to include port 3001
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -39,7 +57,7 @@ class SummaryRequest(BaseModel):
 
 class TranscriptionManager:
     """
-    This class handles real-time transcription using Deepgram.
+    This class handles real-time transcription using Deepgram SDK v3.2.7.
     It's like a bridge between your microphone and Deepgram's AI.
     """
     
@@ -48,17 +66,22 @@ class TranscriptionManager:
         if not self.api_key:
             raise ValueError("DEEPGRAM_API_KEY not found in environment variables")
         
+        # Use DeepgramClient for SDK v3 with SSL configuration
         self.deepgram = DeepgramClient(self.api_key)
         self.connection = None
         self.websocket = None
         self.full_transcript = ""  # Store complete transcript
+        self.is_connected = False
+        self.message_queue = queue.Queue()  # Queue for messages from callbacks
+        self.loop = None  # Store the event loop
     
     async def start_transcription(self, websocket: WebSocket):
         """Start real-time transcription with Deepgram"""
         try:
             self.websocket = websocket
+            self.loop = asyncio.get_event_loop()  # Store the current event loop
             
-            # Configure Deepgram options
+            # Configure Deepgram options for SDK v3.2.7
             options = LiveOptions(
                 model="nova-2",
                 language="en-US",
@@ -70,8 +93,8 @@ class TranscriptionManager:
                 diarize=True,  # Speaker identification
             )
             
-            # Create connection
-            self.connection = self.deepgram.listen.websocket.v("1")
+            # Create live transcription connection
+            self.connection = self.deepgram.listen.live.v("1")
             
             # Set up event handlers
             self.connection.on(LiveTranscriptionEvents.Open, self.on_open)
@@ -79,78 +102,119 @@ class TranscriptionManager:
             self.connection.on(LiveTranscriptionEvents.Error, self.on_error)
             self.connection.on(LiveTranscriptionEvents.Close, self.on_close)
             
-            # Start connection
-            if not await self.connection.start(options):
+            # FIXED: Don't await the start method - it returns a boolean, not a coroutine
+            result = self.connection.start(options)
+            
+            if result:
+                self.is_connected = True
+                return True
+            else:
                 raise Exception("Failed to start Deepgram connection")
-                
-            return True
             
         except Exception as e:
             print(f"Error starting transcription: {e}")
+            await websocket.send_text(json.dumps({
+                "type": "error",
+                "message": f"Failed to start transcription: {str(e)}"
+            }))
             return False
     
-    async def on_open(self, *args, **kwargs):
+    def on_open(self, *args, **kwargs):
         """Called when Deepgram connection opens"""
         print("Deepgram connection opened")
-        if self.websocket:
-            await self.websocket.send_text(json.dumps({
-                "type": "connection_opened",
-                "message": "Connected to Deepgram"
-            }))
+        self.is_connected = True
+        self.queue_message({
+            "type": "connection_opened",
+            "message": "Connected to Deepgram"
+        })
     
-    async def on_message(self, *args, **kwargs):
+    def on_message(self, *args, **kwargs):
         """Handle transcription results from Deepgram"""
         try:
             result = kwargs.get('result')
-            if result:
-                sentence = result.channel.alternatives[0].transcript
-                
-                if len(sentence.strip()) > 0:
-                    is_final = result.is_final
+            if result and hasattr(result, 'channel'):
+                alternatives = result.channel.alternatives
+                if alternatives and len(alternatives) > 0:
+                    sentence = alternatives[0].transcript
                     
-                    # Add to full transcript if final
-                    if is_final:
-                        self.full_transcript += " " + sentence
-                    
-                    # Send to frontend
-                    if self.websocket:
-                        await self.websocket.send_text(json.dumps({
+                    if len(sentence.strip()) > 0:
+                        is_final = result.is_final
+                        
+                        # Add to full transcript if final
+                        if is_final:
+                            self.full_transcript += " " + sentence
+                        
+                        # Queue message to be sent to frontend
+                        self.queue_message({
                             "type": "transcription",
                             "text": sentence,
                             "is_final": is_final,
                             "full_transcript": self.full_transcript.strip()
-                        }))
+                        })
                         
         except Exception as e:
             print(f"Error processing transcription: {e}")
     
-    async def on_error(self, error, **kwargs):
+    def on_error(self, error, **kwargs):
         """Handle Deepgram errors"""
         print(f"Deepgram error: {error}")
-        if self.websocket:
-            await self.websocket.send_text(json.dumps({
-                "type": "error",
-                "message": str(error)
-            }))
+        self.queue_message({
+            "type": "error",
+            "message": str(error)
+        })
     
-    async def on_close(self, *args, **kwargs):
+    def on_close(self, *args, **kwargs):
         """Handle connection close"""
         print("Deepgram connection closed")
-        if self.websocket:
-            await self.websocket.send_text(json.dumps({
-                "type": "connection_closed",
-                "message": "Disconnected from Deepgram"
-            }))
+        self.is_connected = False
+        self.queue_message({
+            "type": "connection_closed",
+            "message": "Disconnected from Deepgram"
+        })
     
-    async def send_audio(self, audio_data: bytes):
+    def queue_message(self, message: Dict[str, Any]):
+        """Queue a message to be sent to the WebSocket"""
+        try:
+            self.message_queue.put_nowait(message)
+        except Exception as e:
+            print(f"Error queuing message: {e}")
+    
+    async def process_messages(self):
+        """Process queued messages and send them to WebSocket"""
+        while self.is_connected:
+            try:
+                if not self.message_queue.empty():
+                    message = self.message_queue.get_nowait()
+                    if self.websocket:
+                        await self.websocket.send_text(json.dumps(message))
+                await asyncio.sleep(0.01)  # Small delay to prevent busy waiting
+            except queue.Empty:
+                await asyncio.sleep(0.01)
+            except Exception as e:
+                print(f"Error processing message: {e}")
+                await asyncio.sleep(0.1)
+    
+    def send_audio(self, audio_data: bytes):
         """Send audio data to Deepgram"""
-        if self.connection:
-            self.connection.send(audio_data)
+        if self.connection and self.is_connected:
+            try:
+                self.connection.send(audio_data)
+            except Exception as e:
+                print(f"Error sending audio data: {e}")
     
-    async def close(self):
+    def close(self):
         """Clean up connections"""
+        self.is_connected = False
         if self.connection:
-            await self.connection.finish()
+            try:
+                # FIXED: Better error handling for connection cleanup
+                if hasattr(self.connection, 'finish'):
+                    self.connection.finish()
+                elif hasattr(self.connection, 'close'):
+                    self.connection.close()
+            except Exception as e:
+                print(f"Error closing connection: {e}")
+                pass
 
 class AIProcessor:
     """
@@ -237,9 +301,11 @@ async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time communication"""
     await websocket.accept()
     
-    transcription_manager = TranscriptionManager()
+    transcription_manager = None
+    message_task = None
     
     try:
+        transcription_manager = TranscriptionManager()
         success = await transcription_manager.start_transcription(websocket)
         
         if not success:
@@ -249,16 +315,42 @@ async def websocket_endpoint(websocket: WebSocket):
             }))
             return
         
+        # Send success message
+        await websocket.send_text(json.dumps({
+            "type": "ready",
+            "message": "Ready to receive audio"
+        }))
+        
+        # Start message processing task
+        message_task = asyncio.create_task(transcription_manager.process_messages())
+        
         while True:
-            data = await websocket.receive_bytes()
-            await transcription_manager.send_audio(data)
+            try:
+                data = await websocket.receive_bytes()
+                transcription_manager.send_audio(data)
+            except WebSocketDisconnect:
+                print("Client disconnected")
+                break
+            except Exception as e:
+                print(f"Error receiving audio data: {e}")
+                break
             
     except WebSocketDisconnect:
-        print("Client disconnected")
+        print("Client disconnected during setup")
     except Exception as e:
         print(f"WebSocket error: {e}")
+        try:
+            await websocket.send_text(json.dumps({
+                "type": "error",
+                "message": f"WebSocket error: {str(e)}"
+            }))
+        except:
+            pass
     finally:
-        await transcription_manager.close()
+        if transcription_manager:
+            transcription_manager.close()
+        if message_task:
+            message_task.cancel()
 
 # REST API endpoints
 @app.post("/api/summarize")

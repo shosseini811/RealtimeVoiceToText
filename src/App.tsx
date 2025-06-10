@@ -123,15 +123,38 @@ function App() {
       // Connect to backend
       await connectWebSocket();
       
-      // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
+      // First, enumerate audio devices to find BlackHole
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      console.log('Available audio devices:', devices.filter(device => device.kind === 'audioinput'));
+      
+      // Look for BlackHole device
+      const blackHoleDevice = devices.find(device => 
+        device.kind === 'audioinput' && 
+        (device.label.includes('BlackHole') || device.label.includes('blackhole'))
+      );
+      
+      console.log('BlackHole device found:', blackHoleDevice);
+      
+      // Request microphone access with specific device if found
+      const constraints: MediaStreamConstraints = {
+        audio: blackHoleDevice ? {
+          deviceId: { exact: blackHoleDevice.deviceId },
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: false,  // Disable for system audio
+          noiseSuppression: false,  // Disable for system audio
+        } : {
           sampleRate: 16000,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
-        } 
-      });
+        }
+      };
+      
+      console.log('Using audio constraints:', constraints);
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('Audio stream obtained:', stream.getAudioTracks()[0].getSettings());
       
       audioStreamRef.current = stream;
 
@@ -144,6 +167,7 @@ function App() {
 
       // Handle audio data
       mediaRecorder.ondataavailable = (event) => {
+        console.log('Audio data available, size:', event.data.size);
         if (event.data.size > 0 && websocketRef.current?.readyState === WebSocket.OPEN) {
           websocketRef.current.send(event.data);
         }

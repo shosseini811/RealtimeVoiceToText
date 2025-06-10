@@ -5,11 +5,13 @@ A modern macOS application that combines real-time speech transcription with AI-
 ## ✨ Features
 
 - 🎤 **Real-time Transcription** - Live speech-to-text using Deepgram's advanced API
+- 🔊 **Speaker Audio Capture** - Transcribe YouTube videos, music, or any system audio using BlackHole
 - 🤖 **AI-Powered Summaries** - Intelligent meeting summaries using Google Gemini Flash 2.5
 - 📝 **Smart Insights** - Extract action items, key points, and decisions automatically
 - 🎨 **Modern UI** - Beautiful, responsive design optimized for macOS
 - 🔒 **Privacy-Focused** - No bots in meetings, audio processed securely
 - ⚡ **Real-time Updates** - See transcription as you speak with WebSocket connection
+- 🎵 **Multi-Output Audio** - Hear audio while transcribing simultaneously
 - 📋 **Easy Export** - Copy transcriptions and summaries to clipboard
 
 ## 🛠 Tech Stack
@@ -35,6 +37,7 @@ Before you begin, ensure you have:
 - **Node.js 16+** - [Download Node.js](https://nodejs.org/)
 - **Deepgram API Key** - [Get free API key](https://console.deepgram.com/)
 - **Google Gemini API Key** - [Get API key](https://makersuite.google.com/app/apikey)
+- **BlackHole (Optional)** - For transcribing speaker audio (videos, music, etc.) instead of just microphone input
 
 ## 🚀 Quick Start
 
@@ -103,6 +106,96 @@ Frontend runs on `http://localhost:3000`
 4. Click "AI Summary" to get intelligent insights
 5. Use quick actions for specific extractions
 6. Copy results or clear to start over
+
+## 🔊 Speaker Audio Transcription (BlackHole Setup)
+
+Want to transcribe audio from YouTube videos, music, or any speaker output? Follow this advanced setup to capture **system audio** instead of just microphone input.
+
+### Prerequisites for Speaker Audio
+- **macOS** (BlackHole is macOS-specific)
+- **Homebrew** - [Install Homebrew](https://brew.sh/) if you don't have it
+
+### Step 1: Install BlackHole
+```bash
+# Install BlackHole virtual audio driver
+brew install blackhole-2ch
+
+# Note: You'll need to restart your Mac after installation
+sudo reboot
+```
+
+### Step 2: Create Multi-Output Device (Optional - for hearing + transcribing)
+
+If you want to **both hear audio AND transcribe it simultaneously**:
+
+1. **Open Audio MIDI Setup**:
+   ```bash
+   open -a "Audio MIDI Setup"
+   ```
+
+2. **Create Multi-Output Device**:
+   - Click the **"+" button** → **"Create Multi-Output Device"**
+   - Check **both boxes**:
+     - ✅ **Your speakers** (e.g., "Mac mini Speakers")
+     - ✅ **BlackHole 2ch**
+   - Rename it to **"Speakers + BlackHole"**
+
+### Step 3: Configure Audio Routing
+
+**Option A: Transcribe Only (No Audio Playback)**
+```bash
+# Set both input and output to BlackHole
+# Output: All system audio goes to BlackHole (no speakers)
+# Input: App captures audio from BlackHole
+```
+
+**Option B: Hear + Transcribe Simultaneously** 
+```bash
+# Set output to Multi-Output Device (speakers + BlackHole)
+# Set input to BlackHole 2ch
+# Result: You hear audio AND app captures it
+```
+
+### Step 4: Quick Audio Setup Commands
+
+Install SwitchAudioSource for easy switching:
+```bash
+brew install switchaudio-osx
+```
+
+**Quick Commands:**
+```bash
+# Check available audio devices
+SwitchAudioSource -a
+
+# Set output to BlackHole only (transcribe only, no audio)
+SwitchAudioSource -s "BlackHole 2ch"
+SwitchAudioSource -t input -s "BlackHole 2ch"
+
+# Set output to Multi-Output (hear + transcribe)
+SwitchAudioSource -s "Speakers + BlackHole"
+SwitchAudioSource -t input -s "BlackHole 2ch"
+
+# Return to normal (speakers + microphone)
+SwitchAudioSource -s "Mac mini Speakers"
+SwitchAudioSource -t input -s "External Microphone"
+```
+
+### Step 5: Test Speaker Audio Transcription
+
+1. **Configure audio routing** (using commands above)
+2. **Play a YouTube video** with clear speech
+3. **Open your transcription app**: `http://localhost:3000`
+4. **Click "Start Recording"**
+5. **Watch the video's audio get transcribed in real-time!** 🎵→📝
+
+### How It Works
+```
+YouTube Video → System Audio → BlackHole → Your App → Deepgram → Transcription
+     🎥              🔊           🔄         📱          🤖         📝
+```
+
+**BlackHole** acts as a "virtual cable" that routes system audio to your transcription app, enabling you to transcribe any audio playing on your computer.
 
 ## 🏗 Architecture
 
@@ -253,6 +346,34 @@ npm install
 - Verify Gemini API key is correct
 - Check backend logs for errors
 - Ensure you have API quota remaining
+
+### BlackHole & Speaker Audio Issues
+
+**6. No Transcription from Speaker Audio**
+- Verify BlackHole is installed: `SwitchAudioSource -a | grep BlackHole`
+- Check audio routing: Output and Input both use BlackHole
+- Restart browser after changing audio settings
+- Check browser console (F12) for audio device selection
+
+**7. Can't Hear Audio While Transcribing**
+- Use Multi-Output Device instead of BlackHole only
+- Ensure both speakers and BlackHole are checked in Multi-Output Device
+- Audio MIDI Setup → Multi-Output Device → Check both boxes
+
+**8. Browser Not Using BlackHole**
+- Clear browser microphone permissions
+- Refresh page and manually select "BlackHole 2ch" when prompted
+- Chrome: Settings → Privacy → Microphone → Allow localhost:3000
+
+**9. BlackHole Not Appearing in Browser**
+- Restart browser after installing BlackHole
+- Restart Mac if BlackHole still not visible
+- Check System Preferences → Sound → Input for BlackHole
+
+**10. Audio Cutting Out or Poor Quality**
+- Reduce audio constraints in browser (disable echo cancellation for system audio)
+- Check CPU usage - transcription is resource-intensive
+- Try lower sample rate in MediaRecorder settings
 
 ### Development Commands
 
