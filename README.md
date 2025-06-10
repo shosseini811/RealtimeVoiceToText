@@ -1,35 +1,51 @@
-# Real-time Voice to Text App
+# 🤖 AI Note Taker
 
-A modern macOS application that converts speech to text in real-time using Deepgram's powerful API. Built with React (TypeScript) frontend and Python (FastAPI) backend.
+A modern macOS application that combines real-time speech transcription with AI-powered summaries. Built with React (TypeScript) frontend and Python (FastAPI) backend, powered by Deepgram for transcription and Google Gemini for AI insights.
 
-## Features
+## ✨ Features
 
-- 🎤 **Real-time transcription** - See your words appear as you speak
-- 🔄 **Live updates** - Interim results show partial transcriptions
-- 📋 **Copy to clipboard** - Easy text copying functionality
+- 🎤 **Real-time Transcription** - Live speech-to-text using Deepgram's advanced API
+- 🤖 **AI-Powered Summaries** - Intelligent meeting summaries using Google Gemini Flash 2.5
+- 📝 **Smart Insights** - Extract action items, key points, and decisions automatically
 - 🎨 **Modern UI** - Beautiful, responsive design optimized for macOS
-- 🔒 **Secure** - API key stored in environment variables
-- ⚡ **Fast** - WebSocket connection for minimal latency
+- 🔒 **Privacy-Focused** - No bots in meetings, audio processed securely
+- ⚡ **Real-time Updates** - See transcription as you speak with WebSocket connection
+- 📋 **Easy Export** - Copy transcriptions and summaries to clipboard
 
-## Prerequisites
+## 🛠 Tech Stack
 
-Before you begin, ensure you have the following installed:
+**Frontend:**
+- React 18 with TypeScript
+- Modern CSS with glassmorphism design
+- Lucide React icons
+- WebSocket for real-time communication
+
+**Backend:**
+- Python FastAPI
+- Deepgram SDK for speech recognition
+- Google Generative AI (Gemini)
+- WebSocket support
+- Pydantic for data validation
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have:
 
 - **Python 3.8+** - [Download Python](https://www.python.org/downloads/)
 - **Node.js 16+** - [Download Node.js](https://nodejs.org/)
-- **npm or yarn** - Comes with Node.js
-- **Deepgram API Key** - [Get your free API key](https://console.deepgram.com/)
+- **Deepgram API Key** - [Get free API key](https://console.deepgram.com/)
+- **Google Gemini API Key** - [Get API key](https://makersuite.google.com/app/apikey)
 
-## Quick Start
+## 🚀 Quick Start
 
-### 1. Clone the Repository
+### 1. Clone and Setup
 
 ```bash
 git clone <your-repo-url>
-cd RealtimeVoiceToText
+cd ai-note-taker
 ```
 
-### 2. Set Up the Backend (Python)
+### 2. Backend Setup (Python)
 
 ```bash
 # Install Python dependencies
@@ -38,130 +54,79 @@ pip install -r requirements.txt
 # Create environment file
 cp env.example .env
 
-# Edit .env file and add your Deepgram API key
-# DEEPGRAM_API_KEY=your_actual_api_key_here
+# Edit .env file with your API keys
+# DEEPGRAM_API_KEY=your_deepgram_api_key_here
+# GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-### 3. Set Up the Frontend (React)
+### 3. Frontend Setup (React)
 
 ```bash
 # Install Node.js dependencies
 npm install
 ```
 
-### 4. Get Your Deepgram API Key
+### 4. Get Your API Keys
 
+**Deepgram API Key:**
 1. Go to [Deepgram Console](https://console.deepgram.com/)
-2. Sign up for a free account
+2. Sign up for a free account (includes $200 credit)
 3. Create a new project
 4. Copy your API key
-5. Add it to your `.env` file
+
+**Google Gemini API Key:**
+1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Sign in with your Google account
+3. Create a new API key
+4. Copy your API key
 
 ### 5. Run the Application
 
-**Terminal 1 - Start the Python Backend:**
+**Terminal 1 - Start Python Backend:**
 ```bash
 cd backend
 python main.py
 ```
-The backend will start on `http://localhost:8000`
+Backend runs on `http://localhost:8000`
 
-**Terminal 2 - Start the React Frontend:**
+**Terminal 2 - Start React Frontend:**
 ```bash
 npm start
 ```
-The frontend will start on `http://localhost:3000`
+Frontend runs on `http://localhost:3000`
 
 ### 6. Use the App
 
-1. Open your browser to `http://localhost:3000`
-2. Click "Start Recording"
-3. Allow microphone access when prompted
-4. Start speaking - your words will appear in real-time!
-5. Click "Stop Recording" when finished
-6. Use "Copy" to copy text or "Clear" to start over
+1. Open `http://localhost:3000` in your browser
+2. Click "Start Recording" and allow microphone access
+3. Start speaking - see real-time transcription
+4. Click "AI Summary" to get intelligent insights
+5. Use quick actions for specific extractions
+6. Copy results or clear to start over
 
-## How It Works
-
-### Architecture Overview
+## 🏗 Architecture
 
 ```
-┌─────────────────┐    WebSocket    ┌─────────────────┐    WebSocket    ┌─────────────────┐
+┌─────────────────┐    WebSocket    ┌─────────────────┐    API Calls    ┌─────────────────┐
 │   React App     │ ◄──────────────► │  Python Backend │ ◄──────────────► │  Deepgram API   │
 │   (Frontend)    │                 │   (FastAPI)     │                 │   (Speech AI)   │
-└─────────────────┘                 └─────────────────┘                 └─────────────────┘
+│                 │                 │                 │                 └─────────────────┘
+│                 │    HTTP/REST    │                 │    API Calls    ┌─────────────────┐
+│                 │ ◄──────────────► │                 │ ◄──────────────► │  Gemini API     │
+└─────────────────┘                 └─────────────────┘                 │   (AI Summary)  │
+                                                                        └─────────────────┘
 ```
 
-### Data Flow
-
-1. **Audio Capture**: React app captures microphone audio using `MediaRecorder`
-2. **WebSocket Streaming**: Audio data is sent to Python backend via WebSocket
-3. **Deepgram Processing**: Backend forwards audio to Deepgram's real-time API
-4. **Text Results**: Deepgram returns transcribed text (both interim and final)
-5. **UI Updates**: React app displays transcription results in real-time
-
-### Key Technologies
-
-**Frontend (React + TypeScript):**
-- `MediaRecorder API` - Captures microphone audio
-- `WebSocket` - Real-time communication with backend
-- `React Hooks` - State management (useState, useEffect, useRef)
-- `TypeScript` - Type safety and better development experience
-
-**Backend (Python + FastAPI):**
-- `FastAPI` - Modern web framework for APIs
-- `WebSocket` - Real-time bidirectional communication
-- `Deepgram SDK` - Official Python SDK for Deepgram API
-- `asyncio` - Asynchronous programming for handling concurrent connections
-
-## Understanding TypeScript Concepts
-
-Since you're new to TypeScript, here are the key concepts used in this project:
-
-### 1. **Interfaces** - Defining Data Structures
-```typescript
-interface TranscriptionMessage {
-  type: string;           // Required field
-  text?: string;          // Optional field (note the ?)
-  is_final?: boolean;     // Optional boolean
-  message?: string;       // Optional message
-}
-```
-**What this means**: An interface is like a contract that defines what properties an object should have. The `?` makes properties optional.
-
-### 2. **State with Types** - Typed React State
-```typescript
-const [isRecording, setIsRecording] = useState<boolean>(false);
-const [transcription, setTranscription] = useState<string>('');
-```
-**What this means**: We're telling TypeScript exactly what type of data each state variable will hold. `boolean` for true/false, `string` for text.
-
-### 3. **Refs with Types** - Typed References
-```typescript
-const websocketRef = useRef<WebSocket | null>(null);
-const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-```
-**What this means**: Refs store references to objects. The `| null` means it can be either a WebSocket object OR null (empty).
-
-### 4. **Function Types** - Typed Functions
-```typescript
-const connectWebSocket = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    // function body
-  });
-};
-```
-**What this means**: This function returns a Promise that doesn't return any value (void) when it completes.
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-RealtimeVoiceToText/
+ai-note-taker/
 ├── backend/
 │   └── main.py              # Python FastAPI server
 ├── src/
 │   ├── App.tsx              # Main React component
 │   ├── App.css              # Styles for the app
+│   ├── types.ts             # TypeScript type definitions
 │   ├── index.tsx            # React app entry point
 │   └── index.css            # Global styles
 ├── public/
@@ -169,76 +134,162 @@ RealtimeVoiceToText/
 ├── package.json             # Node.js dependencies
 ├── requirements.txt         # Python dependencies
 ├── tsconfig.json           # TypeScript configuration
+├── env.example             # Environment variables template
 └── README.md               # This file
 ```
 
-## Troubleshooting
+## 🔧 TypeScript Concepts Explained
+
+Since you're new to TypeScript, here are the key concepts used in this project:
+
+### 1. **Interfaces** - Data Structure Contracts
+```typescript
+interface TranscriptionMessage {
+  type: string;           // Required field
+  text?: string;          // Optional field (note the ?)
+  is_final?: boolean;     // Optional boolean
+}
+```
+**What this means**: Interfaces define the shape of objects. The `?` makes properties optional.
+
+### 2. **State with Types** - Typed React State
+```typescript
+const [isRecording, setIsRecording] = useState<boolean>(false);
+const [transcription, setTranscription] = useState<string>('');
+```
+**What this means**: We tell TypeScript exactly what type of data each state variable holds.
+
+### 3. **Union Types** - Multiple Possible Types
+```typescript
+type ConnectionStatus = 'Disconnected' | 'Connected' | 'Connection Error';
+```
+**What this means**: A variable can be one of several specific string values.
+
+### 4. **Generic Types** - Flexible Type Parameters
+```typescript
+const websocketRef = useRef<WebSocket | null>(null);
+```
+**What this means**: The ref can hold either a WebSocket object OR null.
+
+### 5. **Function Types** - Typed Functions
+```typescript
+const connectWebSocket = (): Promise<void> => {
+  // Returns a Promise that resolves to nothing (void)
+};
+```
+
+## 🎯 API Endpoints
+
+### WebSocket Endpoints
+- `ws://localhost:8000/ws` - Real-time transcription
+
+### REST Endpoints
+- `GET /` - API information
+- `GET /api/health` - Health check
+- `POST /api/summarize` - Generate AI summary
+
+### Example API Usage
+```typescript
+// Generate AI summary
+const response = await fetch('http://localhost:8000/api/summarize', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    text: "Meeting transcript here...",
+    summary_type: "meeting" // or "action_items" or "key_points"
+  })
+});
+```
+
+## 🔍 How It Works
+
+### Real-time Transcription Flow
+1. **Audio Capture**: React captures microphone audio using MediaRecorder
+2. **WebSocket Streaming**: Audio sent to Python backend via WebSocket
+3. **Deepgram Processing**: Backend forwards audio to Deepgram's real-time API
+4. **Live Results**: Deepgram returns both interim and final transcriptions
+5. **UI Updates**: React displays results in real-time
+
+### AI Summary Generation
+1. **Text Processing**: Complete transcript sent to backend
+2. **Gemini Analysis**: Google's Gemini AI analyzes the content
+3. **Structured Output**: AI returns formatted summaries, action items, etc.
+4. **Display**: Frontend shows organized insights
+
+## 🎨 UI Features
+
+- **Glassmorphism Design** - Modern translucent panels with blur effects
+- **Real-time Status** - Live connection status with animated indicators
+- **Responsive Layout** - Works on desktop and mobile devices
+- **Copy Functionality** - Easy clipboard integration
+- **Loading States** - Visual feedback during AI processing
+- **Error Handling** - Clear error messages and recovery options
+
+## 🔧 Troubleshooting
 
 ### Common Issues
 
 **1. "Cannot find module 'react'" Error**
 ```bash
-# Make sure you've installed dependencies
 npm install
 ```
 
-**2. "DEEPGRAM_API_KEY not found" Error**
-- Make sure you created a `.env` file in the root directory
-- Add your actual Deepgram API key to the file
+**2. "API Key not found" Error**
+- Ensure `.env` file exists in root directory
+- Add your actual API keys to the file
 - Restart the Python backend
 
 **3. Microphone Permission Denied**
-- Check your browser's microphone permissions
+- Check browser microphone permissions
 - On macOS: System Preferences → Security & Privacy → Privacy → Microphone
-- Make sure your browser has microphone access
+- Ensure browser has microphone access
 
 **4. WebSocket Connection Failed**
-- Make sure the Python backend is running on port 8000
-- Check if any firewall is blocking the connection
+- Ensure Python backend is running on port 8000
+- Check firewall settings
 - Try restarting both frontend and backend
 
-**5. No Audio Being Captured**
-- Check if your microphone is working in other apps
-- Try using a different browser (Chrome works best)
-- Check browser console for error messages
+**5. AI Summary Not Working**
+- Verify Gemini API key is correct
+- Check backend logs for errors
+- Ensure you have API quota remaining
 
-### Development Tips
+### Development Commands
 
-**For Python Backend:**
 ```bash
-# Run with auto-reload for development
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
+# Backend development with auto-reload
+cd backend && uvicorn main:app --reload
 
-**For React Frontend:**
-```bash
-# Run in development mode with hot reload
+# Frontend development
 npm start
+
+# Install new Python package
+pip install package_name && pip freeze > requirements.txt
+
+# Install new Node package
+npm install package_name
 ```
 
-## API Endpoints
+## 🚀 Deployment
 
-### Backend Endpoints
+### For macOS App Distribution
 
-- `GET /` - Basic API information
-- `GET /health` - Health check endpoint
-- `WebSocket /ws` - Real-time audio streaming endpoint
-
-### WebSocket Message Types
-
-**From Frontend to Backend:**
-- Binary audio data (WebM format)
-
-**From Backend to Frontend:**
-```json
-{
-  "type": "transcription",
-  "text": "Hello world",
-  "is_final": true
-}
+1. **Build React App**
+```bash
+npm run build
 ```
 
-## Contributing
+2. **Package Python Backend**
+```bash
+pip install pyinstaller
+pyinstaller --onefile backend/main.py
+```
+
+3. **Create macOS App Bundle**
+- Use tools like `py2app` or `electron` to create native macOS app
+- Include both frontend build and backend executable
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -246,25 +297,27 @@ npm start
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- [Deepgram](https://deepgram.com/) for providing the excellent speech-to-text API
+- [Deepgram](https://deepgram.com/) for excellent speech-to-text API
+- [Google AI](https://ai.google.dev/) for Gemini AI capabilities
 - [FastAPI](https://fastapi.tiangolo.com/) for the modern Python web framework
 - [React](https://reactjs.org/) for the powerful frontend library
+- [Lucide](https://lucide.dev/) for beautiful icons
 
-## Support
+## 📞 Support
 
-If you encounter any issues or have questions:
+If you encounter issues:
 
 1. Check the troubleshooting section above
-2. Look at the browser console for error messages
-3. Check the Python backend logs
+2. Look at browser console for error messages
+3. Check Python backend logs
 4. Create an issue in this repository
 
 ---
 
-**Happy transcribing! 🎤→📝**
+**Happy note-taking! 🎤→📝→🤖** 

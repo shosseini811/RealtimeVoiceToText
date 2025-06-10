@@ -1,51 +1,52 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Mic, MicOff, FileText, Trash2, Copy, Sparkles, CheckCircle } from 'lucide-react';
 import './App.css';
+import { TranscriptionMessage, AISummary, ConnectionStatus, SummaryType } from './types';
 
-// Define the structure of messages we receive from the backend
-// This is called a "type" in TypeScript - it helps us know what data to expect
-interface TranscriptionMessage {
-  type: string;           // Type of message (transcription, error, etc.)
-  text?: string;          // The transcribed text (optional with ?)
-  is_final?: boolean;     // Whether this is the final result or partial
-  message?: string;       // Status messages
-}
-
+/**
+ * Main App Component
+ * This is the heart of our AI Note Taker application
+ */
 function App() {
-  // State variables - these store data that can change over time
-  // Think of them as containers that hold information about our app's current state
+  // State Management with TypeScript
+  // Each state variable has a specific type, which helps prevent bugs
   
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [transcription, setTranscription] = useState<string>('');
   const [interimText, setInterimText] = useState<string>('');
-  const [connectionStatus, setConnectionStatus] = useState<string>('Disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('Disconnected');
   const [error, setError] = useState<string>('');
-  
-  // Refs - these are like variables that persist between renders but don't cause re-renders
-  // We use them to store references to objects we need to access later
+  const [aiSummary, setAiSummary] = useState<AISummary | null>(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState<boolean>(false);
+  const [copySuccess, setCopySuccess] = useState<boolean>(false);
+
+  // Refs for persistent objects
+  // These don't cause re-renders when they change, but persist between renders
   const websocketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
 
-  // This function runs when the component first loads
-  // useEffect is a React "hook" that lets us perform side effects
+  // Cleanup on component unmount
   useEffect(() => {
-    // Cleanup function - runs when component unmounts (closes)
     return () => {
       stopRecording();
       if (websocketRef.current) {
         websocketRef.current.close();
       }
     };
-  }, []); // Empty array means this only runs once when component mounts
+  }, []);
 
+  /**
+   * Connect to WebSocket backend
+   * Returns a Promise - this is an asynchronous operation
+   */
   const connectWebSocket = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       try {
-        // Create WebSocket connection to our Python backend
+        setConnectionStatus('Connecting');
         const ws = new WebSocket('ws://localhost:8000/ws');
         websocketRef.current = ws;
 
-        // Event handler for when connection opens
         ws.onopen = () => {
           console.log('WebSocket connected');
           setConnectionStatus('Connected');
@@ -53,19 +54,17 @@ function App() {
           resolve();
         };
 
-        // Event handler for receiving messages from backend
         ws.onmessage = (event) => {
           try {
-            // Parse the JSON message from our Python backend
+            // Parse JSON message with TypeScript type checking
             const data: TranscriptionMessage = JSON.parse(event.data);
             
-            // Handle different types of messages
             switch (data.type) {
               case 'transcription':
                 if (data.text) {
                   if (data.is_final) {
-                    // Final result - add to main transcription and clear interim
-                    setTranscription(prev => prev + ' ' + data.text);
+                    // Final result - add to main transcription
+                    setTranscription(data.full_transcript || '');
                     setInterimText('');
                   } else {
                     // Interim result - show as temporary text
@@ -79,11 +78,12 @@ function App() {
                 break;
               
               case 'connection_closed':
-                setConnectionStatus('Disconnected from Deepgram');
+                setConnectionStatus('Disconnected');
                 break;
               
               case 'error':
                 setError(data.message || 'Unknown error occurred');
+                setConnectionStatus('Connection Error');
                 break;
             }
           } catch (err) {
@@ -91,7 +91,6 @@ function App() {
           }
         };
 
-        // Event handler for connection errors
         ws.onerror = (error) => {
           console.error('WebSocket error:', error);
           setError('Connection error occurred');
@@ -99,7 +98,6 @@ function App() {
           reject(error);
         };
 
-        // Event handler for when connection closes
         ws.onclose = () => {
           console.log('WebSocket disconnected');
           setConnectionStatus('Disconnected');
@@ -109,70 +107,72 @@ function App() {
       } catch (error) {
         console.error('Failed to create WebSocket:', error);
         setError('Failed to create connection');
+        setConnectionStatus('Connection Error');
         reject(error);
       }
     });
   };
 
+  /**
+   * Start recording audio and transcription
+   */
   const startRecording = async () => {
     try {
       setError('');
       
-      // First, connect to our backend
+      // Connect to backend
       await connectWebSocket();
       
-      // Request access to user's microphone
-      // This will show a permission dialog in the browser
+      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          sampleRate: 16000,        // Deepgram works well with 16kHz
-          channelCount: 1,          // Mono audio
-          echoCancellation: true,   // Reduce echo
-          noiseSuppression: true,   // Reduce background noise
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
         } 
       });
       
       audioStreamRef.current = stream;
 
-      // Create MediaRecorder to capture audio data
-      // MediaRecorder converts microphone input into data we can send
+      // Create MediaRecorder
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus', // Use WebM format with Opus codec
+        mimeType: 'audio/webm;codecs=opus',
       });
       
       mediaRecorderRef.current = mediaRecorder;
 
-      // Event handler for when audio data is available
+      // Handle audio data
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0 && websocketRef.current?.readyState === WebSocket.OPEN) {
-          // Send audio data to our Python backend
           websocketRef.current.send(event.data);
         }
       };
 
-      // Start recording and send data every 100ms for real-time processing
-      mediaRecorder.start(100);
+      // Start recording
+      mediaRecorder.start(100); // Send data every 100ms
       setIsRecording(true);
       
     } catch (error) {
       console.error('Error starting recording:', error);
       setError('Failed to start recording. Please check microphone permissions.');
+      setConnectionStatus('Connection Error');
     }
   };
 
+  /**
+   * Stop recording and cleanup
+   */
   const stopRecording = () => {
-    // Stop the media recorder
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
     
-    // Stop all audio tracks (turns off microphone)
     if (audioStreamRef.current) {
       audioStreamRef.current.getTracks().forEach(track => track.stop());
       audioStreamRef.current = null;
     }
     
-    // Close WebSocket connection
     if (websocketRef.current) {
       websocketRef.current.close();
       websocketRef.current = null;
@@ -183,34 +183,86 @@ function App() {
     setInterimText('');
   };
 
-  const clearTranscription = () => {
-    setTranscription('');
-    setInterimText('');
+  /**
+   * Generate AI summary using Gemini
+   */
+  const generateSummary = async (summaryType: SummaryType = 'meeting') => {
+    if (!transcription.trim()) {
+      setError('No transcription available to summarize');
+      return;
+    }
+
+    setIsGeneratingSummary(true);
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:8000/api/summarize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: transcription,
+          summary_type: summaryType
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const summary: AISummary = await response.json();
+      setAiSummary(summary);
+
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      setError('Failed to generate AI summary. Please try again.');
+    } finally {
+      setIsGeneratingSummary(false);
+    }
   };
 
-  const copyToClipboard = async () => {
+  /**
+   * Clear all content
+   */
+  const clearAll = () => {
+    setTranscription('');
+    setInterimText('');
+    setAiSummary(null);
+    setError('');
+    setCopySuccess(false);
+  };
+
+  /**
+   * Copy text to clipboard
+   */
+  const copyToClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(transcription);
-      // You could add a toast notification here
-      console.log('Text copied to clipboard');
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
       console.error('Failed to copy text:', error);
+      setError('Failed to copy to clipboard');
     }
   };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>🎤 Real-time Voice to Text</h1>
-        <p>Powered by Deepgram API</p>
+    <div className="app">
+      {/* Header */}
+      <header className="header">
+        <div className="header-content">
+          <h1>🤖 AI Note Taker</h1>
+          <p>Real-time transcription powered by Deepgram + AI summaries by Gemini</p>
+        </div>
       </header>
 
-      <main className="main-content">
+      <main className="main">
         {/* Status Section */}
         <div className="status-section">
           <div className={`status-indicator ${connectionStatus.includes('Connected') ? 'connected' : 'disconnected'}`}>
-            <span className="status-dot"></span>
-            {connectionStatus}
+            <div className="status-dot"></div>
+            <span>{connectionStatus}</span>
           </div>
           
           {error && (
@@ -220,74 +272,203 @@ function App() {
           )}
         </div>
 
-        {/* Control Buttons */}
+        {/* Controls */}
         <div className="controls">
           <button
-            className={`record-button ${isRecording ? 'recording' : ''}`}
+            className={`btn btn-primary ${isRecording ? 'recording' : ''}`}
             onClick={isRecording ? stopRecording : startRecording}
-            disabled={isRecording && connectionStatus === 'Connection Error'}
+            disabled={connectionStatus === 'Connection Error'}
           >
             {isRecording ? (
               <>
-                <span className="recording-icon">⏹️</span>
+                <MicOff size={20} />
                 Stop Recording
               </>
             ) : (
               <>
-                <span className="record-icon">🎤</span>
+                <Mic size={20} />
                 Start Recording
               </>
             )}
           </button>
 
           <button
-            className="clear-button"
-            onClick={clearTranscription}
-            disabled={!transcription && !interimText}
+            className="btn btn-secondary"
+            onClick={() => generateSummary('meeting')}
+            disabled={!transcription.trim() || isGeneratingSummary}
           >
-            🗑️ Clear
+            <Sparkles size={20} />
+            {isGeneratingSummary ? 'Generating...' : 'AI Summary'}
           </button>
 
           <button
-            className="copy-button"
-            onClick={copyToClipboard}
-            disabled={!transcription}
+            className="btn btn-outline"
+            onClick={clearAll}
+            disabled={!transcription && !aiSummary}
           >
-            📋 Copy
+            <Trash2 size={20} />
+            Clear All
           </button>
         </div>
 
-        {/* Transcription Display */}
-        <div className="transcription-section">
-          <h2>Transcription:</h2>
-          <div className="transcription-box">
-            {/* Final transcription text */}
-            <span className="final-text">{transcription}</span>
+        {/* Content Grid */}
+        <div className="content-grid">
+          {/* Transcription Panel */}
+          <div className="panel">
+            <div className="panel-header">
+              <FileText size={20} />
+              <h2>Live Transcription</h2>
+              {transcription && (
+                <button
+                  className="copy-btn"
+                  onClick={() => copyToClipboard(transcription)}
+                  title="Copy transcription"
+                >
+                  {copySuccess ? <CheckCircle size={16} /> : <Copy size={16} />}
+                </button>
+              )}
+            </div>
             
-            {/* Interim (partial) text - shown in different style */}
-            {interimText && (
-              <span className="interim-text"> {interimText}</span>
-            )}
+            <div className="transcription-box">
+              {transcription && (
+                <div className="final-text">{transcription}</div>
+              )}
+              
+              {interimText && (
+                <div className="interim-text">{interimText}</div>
+              )}
+              
+              {!transcription && !interimText && (
+                <div className="placeholder">
+                  Click "Start Recording" and begin speaking...
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* AI Summary Panel */}
+          <div className="panel">
+            <div className="panel-header">
+              <Sparkles size={20} />
+              <h2>AI Summary</h2>
+              {aiSummary && !aiSummary.error && (
+                <button
+                  className="copy-btn"
+                  onClick={() => copyToClipboard(JSON.stringify(aiSummary, null, 2))}
+                  title="Copy summary"
+                >
+                  {copySuccess ? <CheckCircle size={16} /> : <Copy size={16} />}
+                </button>
+              )}
+            </div>
             
-            {/* Show placeholder when no text */}
-            {!transcription && !interimText && (
-              <span className="placeholder-text">
-                Your speech will appear here in real-time...
-              </span>
-            )}
+            <div className="summary-box">
+              {isGeneratingSummary && (
+                <div className="loading">
+                  <div className="spinner"></div>
+                  <p>Generating AI summary...</p>
+                </div>
+              )}
+
+              {aiSummary && !isGeneratingSummary && (
+                <div className="summary-content">
+                  {aiSummary.error ? (
+                    <div className="error">
+                      <p>❌ {aiSummary.error}</p>
+                    </div>
+                  ) : (
+                    <>
+                      {aiSummary.summary && (
+                        <div className="summary-section">
+                          <h3>📝 Summary</h3>
+                          <p>{aiSummary.summary}</p>
+                        </div>
+                      )}
+
+                      {aiSummary.key_points && aiSummary.key_points.length > 0 && (
+                        <div className="summary-section">
+                          <h3>🔑 Key Points</h3>
+                          <ul>
+                            {aiSummary.key_points.map((point, index) => (
+                              <li key={index}>{point}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {aiSummary.action_items && aiSummary.action_items.length > 0 && (
+                        <div className="summary-section">
+                          <h3>✅ Action Items</h3>
+                          <ul>
+                            {aiSummary.action_items.map((item, index) => (
+                              <li key={index}>
+                                <strong>{item.task}</strong>
+                                {item.responsible_party && (
+                                  <span className="responsible"> - {item.responsible_party}</span>
+                                )}
+                                {item.deadline && (
+                                  <span className="deadline"> (Due: {item.deadline})</span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {aiSummary.decisions && aiSummary.decisions.length > 0 && (
+                        <div className="summary-section">
+                          <h3>🎯 Decisions</h3>
+                          <ul>
+                            {aiSummary.decisions.map((decision, index) => (
+                              <li key={index}>{decision}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {aiSummary.next_steps && aiSummary.next_steps.length > 0 && (
+                        <div className="summary-section">
+                          <h3>🚀 Next Steps</h3>
+                          <ul>
+                            {aiSummary.next_steps.map((step, index) => (
+                              <li key={index}>{step}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {!aiSummary && !isGeneratingSummary && (
+                <div className="placeholder">
+                  Record some audio and click "AI Summary" to get intelligent insights...
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Instructions */}
-        <div className="instructions">
-          <h3>How to use:</h3>
-          <ol>
-            <li>Click "Start Recording" to begin voice transcription</li>
-            <li>Speak clearly into your microphone</li>
-            <li>Watch your words appear in real-time</li>
-            <li>Click "Stop Recording" when finished</li>
-            <li>Use "Copy" to copy text to clipboard or "Clear" to start over</li>
-          </ol>
+        {/* Quick Actions */}
+        <div className="quick-actions">
+          <h3>Quick AI Actions</h3>
+          <div className="action-buttons">
+            <button
+              className="btn btn-small"
+              onClick={() => generateSummary('action_items')}
+              disabled={!transcription.trim() || isGeneratingSummary}
+            >
+              Extract Action Items
+            </button>
+            <button
+              className="btn btn-small"
+              onClick={() => generateSummary('key_points')}
+              disabled={!transcription.trim() || isGeneratingSummary}
+            >
+              Get Key Points
+            </button>
+          </div>
         </div>
       </main>
     </div>
