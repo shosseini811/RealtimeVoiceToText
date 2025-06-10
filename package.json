@@ -2,13 +2,18 @@
   "name": "ai-note-taker",
   "version": "1.0.0",
   "description": "AI-powered note taker with real-time transcription and smart summaries",
-  "main": "index.js",
+  "main": "electron/main.js",
+  "homepage": "./",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "backend": "cd backend && python main.py"
+    "backend": "cd backend && python main.py",
+    "electron": "electron .",
+    "electron-dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron-pack": "npm run build && electron-builder",
+    "dist": "npm run build && electron-builder --publish=never"
   },
   "dependencies": {
     "@types/react": "^18.2.0",
@@ -32,6 +37,34 @@
     ]
   },
   "devDependencies": {
-    "@types/node": "^22.15.30"
+    "@types/node": "^22.15.30",
+    "electron": "^32.0.0",
+    "electron-builder": "^25.0.0",
+    "electron-is-dev": "^2.0.0",
+    "concurrently": "^8.2.2",
+    "wait-on": "^8.0.0"
+  },
+  "build": {
+    "appId": "com.ai-note-taker.app",
+    "productName": "AI Note Taker",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "build/**/*",
+      "electron/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "darkModeSupport": true,
+      "type": "distribution"
+    }
   }
 }

@@ -103,4 +103,30 @@ export interface AppState {
   currentSpeaker?: number;         // Currently detected speaker
   featuresStatus?: DeepgramFeatures; // Status of Deepgram features
   speakerCount?: number;           // Total number of detected speakers
+}
+
+/**
+ * 🆕 NEW: Electron API interface for TypeScript
+ * These are the desktop functions available in the renderer process
+ */
+export interface ElectronAPI {
+  // Notifications
+  showNotification: (title: string, body: string) => Promise<void>;
+  
+  // File operations
+  exportTranscription: (content: string, filePath: string) => Promise<{ success: boolean; error?: string }>;
+  
+  // Menu events
+  onMenuStartRecording: (callback: () => void) => () => void;
+  onMenuStopRecording: (callback: () => void) => () => void;
+  onMenuExportTranscription: (callback: (filePath: string) => void) => () => void;
+}
+
+/**
+ * Global window interface extension for Electron
+ */
+declare global {
+  interface Window {
+    electronAPI?: ElectronAPI;
+  }
 } 
