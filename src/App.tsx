@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, FileText, Trash2, Copy, Sparkles, CheckCircle } from 'lucide-react';
 import './App.css';
-import { TranscriptionMessage, AISummary, ConnectionStatus, SummaryType } from './types';
+import { TranscriptionMessage, AISummary, ConnectionStatus, SummaryType, DeepgramFeatures } from './types';
 
 /**
  * Main App Component
  * This is the heart of our AI Note Taker application
  */
 function App() {
-  // State Management with TypeScript
+  // State Management with TypeScript - Enhanced for new features
   // Each state variable has a specific type, which helps prevent bugs
   
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -19,6 +19,12 @@ function App() {
   const [aiSummary, setAiSummary] = useState<AISummary | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState<boolean>(false);
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
+
+  // 🆕 NEW: Enhanced features state
+  const [currentSpeaker, setCurrentSpeaker] = useState<number | undefined>(undefined);
+  const [featuresStatus, setFeaturesStatus] = useState<DeepgramFeatures | undefined>(undefined);
+  const [speakerCount, setSpeakerCount] = useState<number>(0);
+  const [lastMessage, setLastMessage] = useState<TranscriptionMessage | null>(null);
 
   // Refs for persistent objects
   // These don't cause re-renders when they change, but persist between renders
@@ -58,10 +64,22 @@ function App() {
           try {
             // Parse JSON message with TypeScript type checking
             const data: TranscriptionMessage = JSON.parse(event.data);
+            setLastMessage(data); // Store the latest message
             
             switch (data.type) {
               case 'transcription':
                 if (data.text) {
+                  // 🆕 NEW: Handle enhanced features
+                  if (data.speaker !== undefined) {
+                    setCurrentSpeaker(data.speaker);
+                    setSpeakerCount(prev => Math.max(prev, (data.speaker ?? 0) + 1));
+                  }
+                  
+                  if (data.features_used) {
+                    setFeaturesStatus(data.features_used);
+                    setConnectionStatus('Enhanced Features Active');
+                  }
+                  
                   if (data.is_final) {
                     // Final result - add to main transcription
                     setTranscription(data.full_transcript || '');
@@ -255,6 +273,12 @@ function App() {
     setAiSummary(null);
     setError('');
     setCopySuccess(false);
+    
+    // 🆕 NEW: Clear enhanced features state
+    setCurrentSpeaker(undefined);
+    setFeaturesStatus(undefined);
+    setSpeakerCount(0);
+    setLastMessage(null);
   };
 
   /**
@@ -288,6 +312,39 @@ function App() {
             <div className="status-dot"></div>
             <span>{connectionStatus}</span>
           </div>
+          
+          {/* 🆕 NEW: Enhanced Features Status */}
+          {featuresStatus && (
+            <div className="features-status">
+              <h4>🚀 Enhanced Features Active</h4>
+              <div className="feature-badges">
+                {featuresStatus.diarization && (
+                  <span className="feature-badge">🎤 Speaker ID</span>
+                )}
+                {featuresStatus.redaction && (
+                  <span className="feature-badge">🔒 Privacy Protection</span>
+                )}
+                {featuresStatus.paragraphs && (
+                  <span className="feature-badge">📝 Smart Paragraphs</span>
+                )}
+                {featuresStatus.punctuation && (
+                  <span className="feature-badge">✏️ Auto Punctuation</span>
+                )}
+                {featuresStatus.smart_format && (
+                  <span className="feature-badge">🤖 Smart Format</span>
+                )}
+              </div>
+              
+              {currentSpeaker !== undefined && (
+                <div className="speaker-info">
+                  <span className="current-speaker">
+                    👤 Current Speaker: {currentSpeaker} 
+                    {speakerCount > 1 && ` (${speakerCount} speakers detected)`}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
           
           {error && (
             <div className="error-message">
@@ -491,6 +548,15 @@ function App() {
               disabled={!transcription.trim() || isGeneratingSummary}
             >
               Get Key Points
+            </button>
+            {/* 🆕 NEW: Speaker Analysis button */}
+            <button
+              className="btn btn-small"
+              onClick={() => generateSummary('speaker_analysis')}
+              disabled={!transcription.trim() || isGeneratingSummary || speakerCount < 2}
+              title={speakerCount < 2 ? "Speaker analysis requires multiple speakers" : "Analyze by speaker"}
+            >
+              👥 Speaker Analysis
             </button>
           </div>
         </div>

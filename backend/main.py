@@ -76,21 +76,43 @@ class TranscriptionManager:
         self.loop = None  # Store the event loop
     
     async def start_transcription(self, websocket: WebSocket):
-        """Start real-time transcription with Deepgram"""
+        """Start real-time transcription with enhanced Deepgram features
+        
+        Supported features in this SDK version:
+        ✅ Diarization (Speaker identification)
+        ✅ Punctuation (Auto punctuation and capitalization)  
+        ✅ Smart Format (Enhanced number, date, currency formatting)
+        ❌ Redaction (Not available in this SDK version)
+        ❌ Paragraphs (Not available in this SDK version)
+        """
         try:
             self.websocket = websocket
             self.loop = asyncio.get_event_loop()  # Store the current event loop
             
-            # Configure Deepgram options for SDK v3.2.7
+            # 🚀 ENHANCED DEEPGRAM OPTIONS - Using supported features only
             options = LiveOptions(
+                # Core model configuration
                 model="nova-2",
                 language="en-US",
-                smart_format=True,
-                interim_results=True,
-                utterance_end_ms=1000,
-                vad_events=True,
+                
+                # 🎤 DIARIZATION - Speaker identification 
+                # This will tell us when different speakers are talking
+                diarize=True,
+                
+                # ✏️ PUNCTUATION - Add punctuation and capitalization
+                # Makes text properly formatted with periods, commas, etc.
                 punctuate=True,
-                diarize=True,  # Speaker identification
+                
+                # 🤖 SMART FORMAT - Enhanced formatting
+                # Formats dates, times, numbers, currencies properly
+                # Example: "twenty five dollars" → "$25"
+                smart_format=True,
+                
+                # Additional quality improvements
+                interim_results=True,      # Show partial results as user speaks
+                utterance_end_ms=1000,     # End utterance after 1 second silence
+                vad_events=True,           # Voice activity detection
+                profanity_filter=False,    # Keep original speech
             )
             
             # Create live transcription connection
@@ -129,28 +151,56 @@ class TranscriptionManager:
         })
     
     def on_message(self, *args, **kwargs):
-        """Handle transcription results from Deepgram"""
+        """Handle enhanced transcription results from Deepgram"""
         try:
             result = kwargs.get('result')
             if result and hasattr(result, 'channel'):
                 alternatives = result.channel.alternatives
                 if alternatives and len(alternatives) > 0:
-                    sentence = alternatives[0].transcript
+                    transcript_data = alternatives[0]
+                    sentence = transcript_data.transcript
                     
                     if len(sentence.strip()) > 0:
                         is_final = result.is_final
                         
+                        # Extract enhanced features
+                        words = getattr(transcript_data, 'words', [])
+                        
+                        # Speaker information (if diarization is enabled)
+                        speaker_info = None
+                        if words and len(words) > 0:
+                            # Check if speaker information is available
+                            first_word = words[0]
+                            if hasattr(first_word, 'speaker'):
+                                speaker_info = first_word.speaker
+                        
                         # Add to full transcript if final
                         if is_final:
-                            self.full_transcript += " " + sentence
+                            if speaker_info is not None:
+                                self.full_transcript += f"\n[Speaker {speaker_info}]: {sentence}"
+                            else:
+                                self.full_transcript += " " + sentence
                         
-                        # Queue message to be sent to frontend
-                        self.queue_message({
+                        # Enhanced message with all features
+                        message = {
                             "type": "transcription",
                             "text": sentence,
                             "is_final": is_final,
-                            "full_transcript": self.full_transcript.strip()
-                        })
+                            "full_transcript": self.full_transcript.strip(),
+                            # NEW: Enhanced features
+                            "speaker": speaker_info,
+                            "has_diarization": speaker_info is not None,
+                            "word_count": len(words),
+                            "features_used": {
+                                "diarization": True,
+                                "redaction": False,      # Not supported in this SDK version
+                                "paragraphs": False,     # Not supported in this SDK version
+                                "punctuation": True,
+                                "smart_format": True
+                            }
+                        }
+                        
+                        self.queue_message(message)
                         
         except Exception as e:
             print(f"Error processing transcription: {e}")
@@ -266,6 +316,26 @@ class AIProcessor:
                 Transcript: {text}
                 
                 Format as JSON with key 'key_points' containing an array of important points
+                """,
+                
+                # 🆕 NEW: Speaker Analysis for diarization
+                "speaker_analysis": """
+                Analyze this transcript that includes speaker identification (e.g., [Speaker 0], [Speaker 1]).
+                Provide a detailed analysis for each speaker:
+                
+                For each speaker, identify:
+                - Main points they made
+                - Questions they asked
+                - Action items they committed to
+                - Their role/contribution to the conversation
+                - Key insights or decisions they provided
+                
+                Transcript: {text}
+                
+                Format as JSON with keys: 
+                - speaker_summary: array of objects with speaker_id, main_points, action_items, role_in_conversation
+                - overall_summary: brief overview of the multi-speaker conversation
+                - speaker_interactions: how speakers built on each other's ideas
                 """
             }
             
