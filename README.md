@@ -85,20 +85,48 @@ npm install
 
 ### 5. Run the Application
 
-**Terminal 1 - Start Python Backend:**
+**Option A: Using the Startup Script (Recommended)**
 ```bash
-cd backend
-python main.py
-```
-Backend runs on `http://localhost:8000`
+# Terminal 1 - Start Python Backend
+./start_backend.sh
 
-**Terminal 2 - Start React Frontend:**
-```bash
+# Terminal 2 - Start React Frontend  
 npm start
 ```
-Frontend runs on `http://localhost:3000`
 
-### 6. Use the App
+**Option B: Manual Startup**
+```bash
+# Terminal 1 - Start Python Backend
+cd backend
+source venv/bin/activate
+uvicorn main:app --host 0.0.0.0 --port 8000
+
+# Terminal 2 - Start React Frontend
+npm start
+```
+
+**Expected Output:**
+- Backend runs on `http://localhost:8000`
+- Frontend runs on `http://localhost:3000`
+- You should see "INFO: Uvicorn running on http://0.0.0.0:8000" for backend
+- You should see "webpack compiled successfully" for frontend
+
+### 6. Verify Everything is Working
+
+**Quick Status Check:**
+```bash
+# Check if backend is running
+curl http://localhost:8000/api/health
+
+# Should return: {"status":"healthy","deepgram_configured":true,"gemini_configured":true}
+```
+
+**Visual Confirmation:**
+- Frontend: Open `http://localhost:3000` - should show the AI Note Taker interface
+- Backend: Open `http://localhost:8000` - should show API information
+- Both terminals should show no error messages
+
+### 7. Use the App
 
 1. Open `http://localhost:3000` in your browser
 2. Click "Start Recording" and allow microphone access
@@ -322,30 +350,55 @@ const response = await fetch('http://localhost:8000/api/summarize', {
 
 ### Common Issues
 
-**1. "Cannot find module 'react'" Error**
+**1. Backend Server Won't Start or Stops Immediately**
+
+*Symptoms:* Backend starts but immediately exits, or shows "venv/bin/activate: No such file or directory"
+
+*Solutions:*
+```bash
+# Make sure you're in the right directory
+cd /path/to/your/RealtimeVoiceToText
+
+# Use the startup script
+chmod +x start_backend.sh
+./start_backend.sh
+
+# OR manually activate virtual environment
+cd backend
+source venv/bin/activate
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+**2. "Cannot find module 'react'" Error**
 ```bash
 npm install
 ```
 
-**2. "API Key not found" Error**
-- Ensure `.env` file exists in root directory
-- Add your actual API keys to the file
+**3. "API Key not found" Error**
+- Ensure `.env` file exists in `backend/` directory (not root)
+- Add your actual API keys to `backend/.env`
 - Restart the Python backend
 
-**3. Microphone Permission Denied**
+**4. Microphone Permission Denied**
 - Check browser microphone permissions
 - On macOS: System Preferences → Security & Privacy → Privacy → Microphone
 - Ensure browser has microphone access
 
-**4. WebSocket Connection Failed**
+**5. WebSocket Connection Failed**
 - Ensure Python backend is running on port 8000
-- Check firewall settings
+- Check that you see "INFO: Uvicorn running on http://0.0.0.0:8000"
 - Try restarting both frontend and backend
+- Check firewall settings
 
-**5. AI Summary Not Working**
-- Verify Gemini API key is correct
+**6. AI Summary Not Working**
+- Verify Gemini API key is correct in `backend/.env`
 - Check backend logs for errors
 - Ensure you have API quota remaining
+
+**7. "It was working before" - Quick Fix**
+- Backend probably stopped running
+- Use `./start_backend.sh` to restart it
+- Frontend usually stays running and is fine
 
 ### BlackHole & Speaker Audio Issues
 

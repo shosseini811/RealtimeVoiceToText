@@ -414,6 +414,39 @@ class AIProcessor:
     """
     
     @staticmethod
+    def _clean_json_response(response: str) -> str:
+        """
+        Clean AI response to extract pure JSON
+        
+        Sometimes AI models return JSON wrapped in markdown code blocks like:
+        ```json
+        {"key": "value"}
+        ```
+        
+        This method removes the markdown formatting and extracts just the JSON.
+        
+        Args:
+            response: Raw AI response that might contain markdown formatting
+            
+        Returns:
+            Clean JSON string ready for parsing
+        """
+        # Remove leading/trailing whitespace
+        cleaned = response.strip()
+        
+        # Check if response is wrapped in markdown code blocks
+        if cleaned.startswith('```json') and cleaned.endswith('```'):
+            # Remove the ```json at the start and ``` at the end
+            cleaned = cleaned[7:-3]  # Remove first 7 chars (```json\n) and last 3 chars (\n```)
+            cleaned = cleaned.strip()  # Remove any remaining whitespace
+        elif cleaned.startswith('```') and cleaned.endswith('```'):
+            # Handle generic code blocks without 'json' specifier
+            cleaned = cleaned[3:-3]  # Remove first 3 chars (```) and last 3 chars (```)
+            cleaned = cleaned.strip()
+        
+        return cleaned
+    
+    @staticmethod
     async def generate_summary(text: str, summary_type: str = "meeting") -> Dict[str, Any]:
         """
         Generate AI summary using Google Gemini
@@ -502,10 +535,13 @@ class AIProcessor:
             ai_response = response.text
             
             # 🔍 TRY TO PARSE AS JSON
-            # The AI should return JSON, but sometimes it includes extra text
+            # The AI should return JSON, but sometimes it includes extra text or markdown formatting
             try:
-                # Try to parse the response as JSON
-                summary_data = json.loads(ai_response)
+                # Clean the AI response to extract pure JSON
+                cleaned_response = AIProcessor._clean_json_response(ai_response)
+                
+                # Try to parse the cleaned response as JSON
+                summary_data = json.loads(cleaned_response)
                 
                 # Add metadata about the response
                 summary_data["type"] = summary_type
