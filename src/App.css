@@ -1,310 +1,480 @@
 /* ========================================
-   SIMPLE UI STYLES
-   ======================================== */
+   🎨 VOICE TO TEXT APP STYLES
+   ========================================
+   
+   This CSS file contains all the styling for our Voice to Text application.
+   
+   CSS BASICS FOR BEGINNERS:
+   - CSS stands for Cascading Style Sheets
+   - It controls how HTML elements look (colors, sizes, positions, etc.)
+   - Selectors target HTML elements: .class-name, #id-name, element-name
+   - Properties define what to style: color, background, width, height, etc.
+   - Values specify how to style: red, 100px, center, etc.
+   
+   ORGANIZATION:
+   - Reset styles (normalize browser differences)
+   - Layout styles (positioning and structure)
+   - Component styles (individual UI elements)
+   - Responsive styles (mobile/tablet adaptations)
+*/
 
-/* Reset styles */
+/* ========================================
+   🔄 RESET STYLES
+   ======================================== 
+   
+   These styles reset browser defaults to ensure consistent appearance
+   across different browsers (Chrome, Safari, Firefox, etc.)
+*/
+
+/* UNIVERSAL SELECTOR (*) - applies to ALL elements */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  margin: 0;              /* Remove default spacing around elements */
+  padding: 0;             /* Remove default inner spacing */
+  box-sizing: border-box; /* Include padding/border in element width calculations */
 }
+/* 
+   BOX-SIZING EXPLANATION:
+   - border-box: width includes padding and border (easier to work with)
+   - content-box: width is just content (browser default, can be confusing)
+   Example: width: 100px + padding: 10px = total width 100px (not 120px)
+*/
 
+/* BODY ELEMENT - the main container for all visible content */
 body {
+  /* FONT STACK - list of fonts to try in order of preference */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* 
+     FONT STACK EXPLANATION:
+     - -apple-system: Use system font on Apple devices (looks native)
+     - BlinkMacSystemFont: Backup for Apple system font
+     - 'Segoe UI': Windows system font
+     - 'Roboto': Google's font (Android)
+     - sans-serif: Final fallback (any font without decorative lines)
+  */
+  
+  /* FONT SMOOTHING - makes text look cleaner on high-resolution displays */
+  -webkit-font-smoothing: antialiased;     /* For WebKit browsers (Safari, Chrome) */
+  -moz-osx-font-smoothing: grayscale;      /* For Firefox on macOS */
+  
+  /* BACKGROUND GRADIENT - creates a beautiful color transition */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  color: #333;
+  /* 
+     GRADIENT EXPLANATION:
+     - linear-gradient: smooth color transition
+     - 135deg: diagonal direction (top-left to bottom-right)
+     - #667eea: starting color (blue-purple)
+     - #764ba2: ending color (purple)
+     - 0%, 100%: color stops (where each color is fully applied)
+  */
+  
+  min-height: 100vh;      /* Minimum height = full viewport height (vh = viewport height) */
+  color: #333;            /* Default text color (dark gray) */
 }
 
 /* ========================================
-   SIMPLE APP LAYOUT
-   ======================================== */
+   🏗️ MAIN APP LAYOUT
+   ======================================== 
+   
+   These styles control the overall structure and positioning
+   of the main application container
+*/
 
+/* MAIN APP CONTAINER - holds everything */
 .simple-app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
+  min-height: 100vh;      /* Full screen height */
+  display: flex;          /* Use flexbox layout for easy centering */
+  flex-direction: column; /* Stack children vertically */
+  align-items: center;    /* Center horizontally */
+  padding: 2rem;          /* Add space around the edges (rem = relative to root font size) */
 }
+/* 
+   FLEXBOX EXPLANATION:
+   - display: flex makes this a flex container
+   - flex-direction: column stacks children vertically (default is row)
+   - align-items: center centers children horizontally
+   - justify-content: center would center vertically (not used here)
+*/
 
-/* Simple Header */
+/* HEADER SECTION - app title area */
 .simple-header {
-  text-align: center;
-  margin-bottom: 2rem;
+  text-align: center;     /* Center the text */
+  margin-bottom: 2rem;    /* Space below the header */
 }
 
+/* MAIN HEADING - the big title */
 .simple-header h1 {
-  font-size: 2.5rem;
-  color: white;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
+  font-size: 2.5rem;      /* Large text size (rem = relative to root font size) */
+  color: white;           /* White text color */
+  margin-bottom: 0.5rem;  /* Small space below title */
+  font-weight: 700;       /* Bold text (700 = bold, 400 = normal) */
 }
 
-/* Main Content Container */
+/* MAIN CONTENT CONTAINER - the white card that holds everything */
 .simple-main {
-  width: 100%;
-  max-width: 800px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
+  width: 100%;            /* Full width of parent */
+  max-width: 800px;       /* But never wider than 800px */
+  background: rgba(255, 255, 255, 0.95); /* Semi-transparent white background */
+  border-radius: 20px;    /* Rounded corners */
+  padding: 2rem;          /* Inner spacing */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); /* Drop shadow for depth */
+  backdrop-filter: blur(10px); /* Blur effect behind the card (glassmorphism) */
 }
+/* 
+   RGBA COLOR EXPLANATION:
+   - rgba(255, 255, 255, 0.95) = white with 95% opacity (5% transparent)
+   - rgba(red, green, blue, alpha) where alpha = 0 (transparent) to 1 (opaque)
+   
+   BOX-SHADOW EXPLANATION:
+   - 0 = horizontal offset (no horizontal shadow)
+   - 20px = vertical offset (shadow appears below)
+   - 40px = blur radius (how soft the shadow is)
+   - rgba(0, 0, 0, 0.1) = black with 10% opacity (subtle shadow)
+*/
 
 /* ========================================
-   TEXT BOX STYLES
-   ======================================== */
+   📝 TEXT BOX STYLES
+   ======================================== 
+   
+   Styles for the main transcription display area
+*/
 
+/* MAIN TEXT DISPLAY BOX - where transcribed text appears */
 .simple-textbox {
-  background: #f8f9fa;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
-  padding: 2rem;
-  min-height: 200px;
-  margin-bottom: 2rem;
-  font-size: 1.1rem;
-  line-height: 1.6;
+  background: #f8f9fa;    /* Light gray background */
+  border: 2px solid #e9ecef; /* Light gray border */
+  border-radius: 12px;    /* Rounded corners */
+  padding: 2rem;          /* Inner spacing */
+  min-height: 200px;      /* Minimum height even when empty */
+  margin-bottom: 2rem;    /* Space below the text box */
+  font-size: 1.1rem;      /* Slightly larger text */
+  line-height: 1.6;       /* Space between lines (1.6 = 160% of font size) */
 }
 
+/* FINAL TRANSCRIPTION TEXT - the "official" transcribed text */
 .transcription-text {
-  color: #2d3748;
-  font-weight: 500;
+  color: #2d3748;         /* Dark gray color */
+  font-weight: 500;       /* Medium weight (between normal and bold) */
 }
 
+/* INTERIM TEXT - temporary text being processed */
 .interim-text {
-  color: #718096;
-  font-style: italic;
-  margin-top: 1rem;
+  color: #718096;         /* Lighter gray color */
+  font-style: italic;     /* Slanted text to show it's temporary */
+  margin-top: 1rem;       /* Space above interim text */
 }
 
+/* PLACEHOLDER TEXT - shown when no transcription yet */
 .placeholder-text {
-  color: #a0aec0;
-  text-align: center;
-  font-style: italic;
-  margin-top: 2rem;
+  color: #a0aec0;         /* Very light gray */
+  text-align: center;     /* Center the text */
+  font-style: italic;     /* Slanted text */
+  margin-top: 2rem;       /* Space above placeholder */
 }
 
 /* ========================================
-   BUTTON STYLES
-   ======================================== */
+   🎛️ BUTTON STYLES
+   ======================================== 
+   
+   Styles for all interactive buttons in the app
+*/
 
+/* BUTTON CONTAINER - holds all control buttons */
 .simple-controls {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-bottom: 2rem;
+  display: flex;          /* Use flexbox for button layout */
+  gap: 1rem;              /* Space between buttons */
+  justify-content: center; /* Center buttons horizontally */
+  margin-bottom: 2rem;    /* Space below button area */
 }
 
+/* BASE BUTTON STYLE - applies to all buttons */
 .simple-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 2rem;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 160px;
-  justify-content: center;
+  display: flex;          /* Use flexbox for icon + text layout */
+  align-items: center;    /* Center icon and text vertically */
+  gap: 0.5rem;            /* Space between icon and text */
+  padding: 1rem 2rem;     /* Inner spacing (vertical horizontal) */
+  border: none;           /* Remove default button border */
+  border-radius: 12px;    /* Rounded corners */
+  font-size: 1rem;        /* Text size */
+  font-weight: 600;       /* Semi-bold text */
+  cursor: pointer;        /* Show pointer cursor on hover */
+  transition: all 0.3s ease; /* Smooth animation for all property changes */
+  min-width: 160px;       /* Minimum button width for consistency */
+  justify-content: center; /* Center content horizontally */
 }
+/* 
+   TRANSITION EXPLANATION:
+   - all: animate all properties that change
+   - 0.3s: animation duration (0.3 seconds)
+   - ease: animation timing (starts slow, speeds up, slows down)
+*/
 
+/* DISABLED BUTTON STATE - when button can't be clicked */
 .simple-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.5;           /* Make button semi-transparent */
+  cursor: not-allowed;    /* Show "not allowed" cursor */
 }
 
-/* Start Button */
+/* START RECORDING BUTTON - green button */
 .start-btn {
-  background: #48bb78;
-  color: white;
+  background: #48bb78;    /* Green background */
+  color: white;           /* White text */
 }
 
+/* START BUTTON HOVER EFFECT - when mouse is over button */
 .start-btn:hover:not(:disabled) {
-  background: #38a169;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+  background: #38a169;    /* Darker green on hover */
+  transform: translateY(-2px); /* Move button up slightly */
+  box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3); /* Add colored shadow */
 }
+/* 
+   HOVER PSEUDO-CLASS EXPLANATION:
+   - :hover applies when mouse is over the element
+   - :not(:disabled) means "only if not disabled"
+   - transform: translateY(-2px) moves element up 2 pixels
+   - This creates a "lifting" effect
+*/
 
-/* Stop Button */
+/* STOP RECORDING BUTTON - red button with pulse animation */
 .stop-btn {
-  background: #f56565;
-  color: white;
-  animation: pulse 2s infinite;
+  background: #f56565;    /* Red background */
+  color: white;           /* White text */
+  animation: pulse 2s infinite; /* Pulse animation (2 seconds, repeat forever) */
 }
 
+/* STOP BUTTON HOVER EFFECT */
 .stop-btn:hover:not(:disabled) {
-  background: #e53e3e;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(245, 101, 101, 0.3);
+  background: #e53e3e;    /* Darker red on hover */
+  transform: translateY(-2px); /* Lift effect */
+  box-shadow: 0 8px 25px rgba(245, 101, 101, 0.3); /* Red shadow */
 }
 
-/* Clear Button */
+/* CLEAR BUTTON - neutral gray button */
 .clear-btn {
-  background: #e2e8f0;
-  color: #4a5568;
+  background: #e2e8f0;    /* Light gray background */
+  color: #4a5568;         /* Dark gray text */
 }
 
+/* CLEAR BUTTON HOVER EFFECT */
 .clear-btn:hover:not(:disabled) {
-  background: #cbd5e0;
-  transform: translateY(-2px);
+  background: #cbd5e0;    /* Slightly darker gray on hover */
+  transform: translateY(-2px); /* Lift effect */
 }
 
-/* Pulse animation for recording button */
+/* PULSE ANIMATION - makes recording button pulsate */
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
+  0%, 100% {              /* At start and end of animation */
+    opacity: 1;           /* Fully visible */
+    transform: scale(1);  /* Normal size */
   }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
+  50% {                   /* At middle of animation */
+    opacity: 0.8;         /* Slightly transparent */
+    transform: scale(1.05); /* Slightly larger */
   }
 }
+/* 
+   KEYFRAMES EXPLANATION:
+   - @keyframes defines a custom animation
+   - 0%, 50%, 100% are animation steps (percentages of total duration)
+   - scale(1.05) makes element 5% larger
+   - This creates a breathing/pulsing effect
+*/
 
 /* ========================================
-   SUMMARY STYLES
-   ======================================== */
+   🤖 AI SUMMARY STYLES
+   ======================================== 
+   
+   Styles for the AI-generated summary section
+*/
 
+/* SUMMARY CONTAINER - holds the entire summary section */
 .simple-summary {
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  background: #f7fafc;    /* Very light blue-gray background */
+  border: 1px solid #e2e8f0; /* Light gray border */
+  border-radius: 12px;    /* Rounded corners */
+  padding: 1.5rem;        /* Inner spacing */
+  margin-bottom: 2rem;    /* Space below summary */
 }
 
+/* SUMMARY HEADING - "Summary" title */
 .simple-summary h3 {
-  color: #2d3748;
-  margin-bottom: 1rem;
-  font-size: 1.3rem;
+  color: #2d3748;         /* Dark gray color */
+  margin-bottom: 1rem;    /* Space below heading */
+  font-size: 1.3rem;      /* Slightly larger text */
 }
 
+/* LOADING TEXT - shown while AI is processing */
 .loading-text {
-  text-align: center;
-  color: #718096;
-  font-style: italic;
-  padding: 2rem;
+  text-align: center;     /* Center the text */
+  color: #718096;         /* Gray color */
+  font-style: italic;     /* Slanted text */
+  padding: 2rem;          /* Space around text */
 }
 
+/* SUMMARY CONTENT CONTAINER - holds all summary sections */
 .summary-content {
-  color: #4a5568;
+  color: #4a5568;         /* Dark gray text */
 }
 
+/* INDIVIDUAL SUMMARY SECTION - each part of the summary */
 .summary-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;  /* Space below each section */
 }
 
+/* LAST SUMMARY SECTION - remove bottom margin from last section */
 .summary-section:last-child {
-  margin-bottom: 0;
+  margin-bottom: 0;       /* No space below last section */
 }
 
+/* SUMMARY SECTION HEADINGS - "Key Points:", "Action Items:", etc. */
 .summary-section strong {
-  color: #2d3748;
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
+  color: #2d3748;         /* Dark gray color */
+  display: block;         /* Make heading take full width */
+  margin-bottom: 0.5rem;  /* Space below heading */
+  font-size: 1.1rem;      /* Slightly larger text */
 }
 
+/* SUMMARY PARAGRAPHS - text content */
 .summary-section p {
-  margin-bottom: 0.5rem;
-  line-height: 1.6;
+  margin-bottom: 0.5rem;  /* Space below paragraphs */
+  line-height: 1.6;       /* Space between lines */
 }
 
+/* SUMMARY LISTS - bullet point lists */
 .summary-section ul {
-  list-style-type: disc;
-  margin-left: 1.5rem;
+  list-style-type: disc;  /* Use bullet points */
+  margin-left: 1.5rem;    /* Indent the list */
 }
 
+/* SUMMARY LIST ITEMS - individual bullet points */
 .summary-section li {
-  margin-bottom: 0.5rem;
-  line-height: 1.5;
+  margin-bottom: 0.5rem;  /* Space below each item */
+  line-height: 1.5;       /* Space between lines */
 }
 
 /* ========================================
-   ERROR AND STATUS STYLES
-   ======================================== */
+   ⚠️ ERROR AND STATUS STYLES
+   ======================================== 
+   
+   Styles for error messages and status indicators
+*/
 
+/* ERROR MESSAGE CONTAINER - red error box */
 .simple-error {
-  background: rgba(245, 101, 101, 0.1);
-  color: #c53030;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  text-align: center;
-  border: 1px solid rgba(245, 101, 101, 0.3);
+  background: rgba(245, 101, 101, 0.1); /* Light red background (10% opacity) */
+  color: #c53030;         /* Dark red text */
+  padding: 1rem;          /* Inner spacing */
+  border-radius: 8px;     /* Rounded corners */
+  margin-bottom: 1rem;    /* Space below error box */
+  text-align: center;     /* Center the text */
+  border: 1px solid rgba(245, 101, 101, 0.3); /* Red border (30% opacity) */
 }
 
+/* ERROR TEXT - text inside error messages */
 .error-text {
-  color: #c53030;
-  text-align: center;
-  padding: 1rem;
+  color: #c53030;         /* Dark red color */
+  text-align: center;     /* Center the text */
+  padding: 1rem;          /* Space around text */
 }
 
+/* STATUS INDICATOR - connection status display */
 .simple-status {
-  text-align: center;
-  color: #718096;
-  font-size: 0.9rem;
-  padding: 1rem;
-  background: #f7fafc;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  text-align: center;     /* Center the text */
+  color: #718096;         /* Gray color */
+  font-size: 0.9rem;      /* Smaller text */
+  padding: 1rem;          /* Space around text */
+  background: #f7fafc;    /* Light gray background */
+  border-radius: 8px;     /* Rounded corners */
+  border: 1px solid #e2e8f0; /* Light gray border */
 }
 
 /* ========================================
-   RESPONSIVE DESIGN
-   ======================================== */
+   📱 RESPONSIVE DESIGN
+   ======================================== 
+   
+   These styles adapt the layout for different screen sizes
+   Media queries apply styles only when certain conditions are met
+*/
 
+/* TABLET STYLES - screens up to 768px wide */
 @media (max-width: 768px) {
+  /* MAIN APP CONTAINER - less padding on smaller screens */
   .simple-app {
-    padding: 1rem;
+    padding: 1rem;        /* Reduced padding */
   }
   
+  /* MAIN HEADING - smaller text on tablets */
   .simple-header h1 {
-    font-size: 2rem;
+    font-size: 2rem;      /* Smaller heading */
   }
   
+  /* MAIN CONTENT - less padding */
   .simple-main {
-    padding: 1.5rem;
+    padding: 1.5rem;      /* Reduced inner spacing */
   }
   
+  /* BUTTON CONTAINER - stack buttons vertically */
   .simple-controls {
-    flex-direction: column;
-    align-items: center;
+    flex-direction: column; /* Stack buttons vertically instead of horizontally */
+    align-items: center;    /* Center buttons */
   }
   
+  /* BUTTONS - consistent width on mobile */
   .simple-btn {
-    width: 200px;
+    width: 200px;         /* Fixed width for all buttons */
   }
   
+  /* TEXT BOX - smaller on tablets */
   .simple-textbox {
-    padding: 1.5rem;
-    min-height: 150px;
+    padding: 1.5rem;      /* Less inner spacing */
+    min-height: 150px;    /* Shorter minimum height */
   }
 }
 
+/* MOBILE STYLES - screens up to 480px wide (phones) */
 @media (max-width: 480px) {
+  /* MAIN HEADING - even smaller on phones */
   .simple-header h1 {
-    font-size: 1.8rem;
+    font-size: 1.8rem;    /* Smaller heading for phones */
   }
   
+  /* MAIN CONTENT - minimal padding on phones */
   .simple-main {
-    padding: 1rem;
+    padding: 1rem;        /* Minimal inner spacing */
   }
   
+  /* TEXT BOX - compact on phones */
   .simple-textbox {
-    padding: 1rem;
-    font-size: 1rem;
+    padding: 1rem;        /* Less inner spacing */
+    font-size: 1rem;      /* Smaller text */
   }
   
+  /* BUTTONS - smaller on phones */
   .simple-btn {
-    padding: 0.8rem 1.5rem;
-    font-size: 0.9rem;
+    padding: 0.8rem 1.5rem; /* Less padding */
+    font-size: 0.9rem;    /* Smaller text */
   }
-} 
+}
+
+/* 
+   RESPONSIVE DESIGN EXPLANATION:
+   
+   @media queries apply styles only when certain conditions are met:
+   - max-width: 768px means "screens 768px wide or smaller"
+   - This allows us to optimize the layout for different devices
+   - Mobile-first approach: design for mobile, then enhance for larger screens
+   
+   COMMON BREAKPOINTS:
+   - 480px: Small phones
+   - 768px: Tablets
+   - 1024px: Small laptops
+   - 1200px: Desktops
+   
+   RESPONSIVE TECHNIQUES USED:
+   - Flexible layouts with flexbox
+   - Relative units (rem, %, vh)
+   - Adjustable font sizes
+   - Stackable button layouts
+   - Reduced spacing on small screens
+*/ 

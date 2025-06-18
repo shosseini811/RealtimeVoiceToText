@@ -1,8 +1,81 @@
+# 🐍 PYTHON DEPENDENCIES FOR AI NOTE TAKER BACKEND
+#
+# This file lists all the Python packages (libraries) that our backend needs to work.
+# Each line specifies a package name and its exact version number.
+#
+# WHY EXACT VERSIONS?
+# - Ensures everyone gets the same versions (consistency)
+# - Prevents breaking changes from newer versions
+# - Makes deployment more predictable
+#
+# HOW TO INSTALL:
+# Run this command in your terminal: pip install -r requirements.txt
+#
+# HOW TO UPDATE:
+# 1. Change version number in this file
+# 2. Run: pip install -r requirements.txt --upgrade
+
+# 🌐 WEB FRAMEWORK AND SERVER
+# FastAPI: Modern, fast web framework for building APIs with Python
+# - Automatic API documentation generation
+# - Built-in data validation with Pydantic
+# - Native async/await support for high performance
+# - Excellent TypeScript-like type hints
 fastapi==0.104.1
+
+# 🚀 ASGI SERVER
+# Uvicorn: Lightning-fast ASGI server for running FastAPI applications
+# - ASGI = Asynchronous Server Gateway Interface (modern Python web standard)
+# - Handles HTTP requests and WebSocket connections
+# - Much faster than traditional WSGI servers like Gunicorn
+# - Perfect for real-time applications like ours
 uvicorn==0.24.0
+
+# 🔗 REAL-TIME COMMUNICATION
+# WebSockets: Enables bidirectional real-time communication
+# - Allows frontend and backend to send messages instantly
+# - Essential for live audio streaming and transcription
+# - More efficient than HTTP polling for real-time features
+# - Works with FastAPI's WebSocket support
 websockets==12.0
+
+# 🎤 SPEECH-TO-TEXT AI SERVICE
+# Deepgram SDK: Official Python client for Deepgram's AI transcription service
+# - Real-time speech recognition with high accuracy
+# - Speaker diarization (identifies who is speaking)
+# - Automatic punctuation and smart formatting
+# - Supports multiple languages and audio formats
+# - Version 3.2.7 includes latest features and bug fixes
 deepgram-sdk==3.2.7
+
+# 🔐 ENVIRONMENT VARIABLE MANAGEMENT
+# Python-dotenv: Loads environment variables from .env files
+# - Keeps API keys and secrets secure (not in code)
+# - Easy configuration management for different environments
+# - Standard practice for Python applications
+# - Automatically loads .env file when app starts
 python-dotenv==1.0.0
+
+# 📁 FILE UPLOAD HANDLING
+# Python-multipart: Handles file uploads and form data in FastAPI
+# - Required for FastAPI to process multipart/form-data requests
+# - Enables file upload endpoints if needed in the future
+# - Lightweight dependency with no security concerns
 python-multipart==0.0.6
+
+# 🤖 GOOGLE AI FOR SUMMARIES
+# Google Generative AI: Official Google client for Gemini AI models
+# - Generates intelligent summaries of transcribed text
+# - Extracts key points, action items, and decisions
+# - Supports different summary types (meeting, action items, etc.)
+# - Fast and cost-effective compared to other AI services
 google-generativeai==0.3.2
+
+# ✅ DATA VALIDATION AND SERIALIZATION
+# Pydantic: Data validation using Python type annotations
+# - Automatically validates API request/response data
+# - Converts between Python objects and JSON
+# - Provides clear error messages for invalid data
+# - Essential for FastAPI's automatic API documentation
+# - Version 2.5.0 includes performance improvements
 pydantic==2.5.0 
