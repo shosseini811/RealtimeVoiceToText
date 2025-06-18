@@ -1,551 +1,811 @@
-/* Global Styles */
+/* ========================================
+   GLOBAL STYLES
+   ======================================== */
+
+/* 
+ * Universal selector (*) applies to ALL elements on the page
+ * This is a CSS reset to remove default browser styling
+ */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  margin: 0;           /* Remove default margins from all elements */
+  padding: 0;          /* Remove default padding from all elements */
+  box-sizing: border-box;  /* Include padding and border in element's total width/height */
 }
 
+/* 
+ * Body element styles - affects the entire page background and font
+ */
 body {
+  /* Font stack: tries fonts in order until one is found on user's system */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  
+  /* Font smoothing for better text appearance on different screens */
+  -webkit-font-smoothing: antialiased;     /* For WebKit browsers (Safari, Chrome) */
+  -moz-osx-font-smoothing: grayscale;      /* For Firefox on macOS */
+  
+  /* Linear gradient background: creates a diagonal color transition */
+  /* 135deg = diagonal angle, from blue (#667eea) to purple (#764ba2) */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  color: #333;
+  
+  min-height: 100vh;   /* Minimum height = 100% of viewport height (full screen) */
+  color: #333;         /* Default text color for the entire page */
 }
 
+/* 
+ * Main app container - uses flexbox for layout
+ */
 .app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  min-height: 100vh;        /* Full viewport height */
+  display: flex;            /* Enable flexbox layout */
+  flex-direction: column;   /* Stack children vertically (header, main, footer) */
 }
 
-/* Header */
+/* ========================================
+   HEADER SECTION
+   ======================================== */
+
+/* 
+ * Header container with glassmorphism effect
+ */
 .header {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 2rem 0;
+  /* Glassmorphism: semi-transparent background with blur effect */
+  background: rgba(255, 255, 255, 0.1);  /* White with 10% opacity */
+  backdrop-filter: blur(20px);            /* Blur the background behind this element */
+  
+  /* Border styling */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);  /* Semi-transparent white border */
+  
+  padding: 2rem 0;  /* Vertical padding: 2rem top and bottom, 0 left and right */
 }
 
+/* 
+ * Header content wrapper - centers content and limits width
+ */
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  text-align: center;
+  max-width: 1200px;  /* Maximum width to prevent content from being too wide */
+  margin: 0 auto;     /* Center horizontally: 0 top/bottom, auto left/right */
+  padding: 0 2rem;    /* Horizontal padding for mobile spacing */
+  text-align: center; /* Center-align all text inside */
 }
 
+/* 
+ * Main header title styling
+ */
 .header h1 {
-  font-size: 2.5rem;
-  color: white;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
+  font-size: 2.5rem;      /* Large font size (2.5 times the root font size) */
+  color: white;           /* White text color */
+  margin-bottom: 0.5rem;  /* Space below the title */
+  font-weight: 700;       /* Bold font weight (700 = bold) */
 }
 
+/* 
+ * Header subtitle/description styling
+ */
 .header p {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);  /* Almost white (90% opacity) */
+  font-size: 1.1rem;                /* Slightly larger than normal text */
 }
 
-/* Main Content */
+/* ========================================
+   MAIN CONTENT AREA
+   ======================================== */
+
+/* 
+ * Main content container
+ */
 .main {
-  flex: 1;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-  width: 100%;
+  flex: 1;            /* Take up remaining space in flexbox container */
+  max-width: 1200px;  /* Limit maximum width */
+  margin: 0 auto;     /* Center horizontally */
+  padding: 2rem;      /* Padding on all sides */
+  width: 100%;        /* Full width up to max-width */
 }
 
-/* Status Section */
+/* ========================================
+   STATUS SECTION
+   ======================================== */
+
+/* 
+ * Container for connection status display
+ */
 .status-section {
-  margin-bottom: 2rem;
-  text-align: center;
+  margin-bottom: 2rem;  /* Space below this section */
+  text-align: center;   /* Center-align content */
 }
 
+/* 
+ * Status indicator badge (shows connected/disconnected state)
+ */
 .status-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 2rem;
-  border-radius: 50px;
-  font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  margin-bottom: 1rem;
+  display: inline-flex;      /* Flex container that stays inline */
+  align-items: center;       /* Vertically center items inside */
+  gap: 0.75rem;             /* Space between icon and text */
+  padding: 1rem 2rem;       /* Vertical and horizontal padding */
+  border-radius: 50px;      /* Very rounded corners (pill shape) */
+  font-weight: 600;         /* Semi-bold text */
+  font-size: 1rem;          /* Normal font size */
+  transition: all 0.3s ease; /* Smooth transitions for all properties */
+  margin-bottom: 1rem;      /* Space below the indicator */
 }
 
+/* 
+ * Connected state styling (green theme)
+ */
 .status-indicator.connected {
-  background: rgba(34, 197, 94, 0.15);
-  color: #16a34a;
-  border: 2px solid rgba(34, 197, 94, 0.3);
-  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.2);
+  background: rgba(34, 197, 94, 0.15);     /* Light green background (15% opacity) */
+  color: #16a34a;                          /* Dark green text */
+  border: 2px solid rgba(34, 197, 94, 0.3); /* Green border (30% opacity) */
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.2); /* Green glow shadow */
 }
 
+/* 
+ * Disconnected state styling (red theme)
+ */
 .status-indicator.disconnected {
-  background: rgba(239, 68, 68, 0.15);
-  color: #dc2626;
-  border: 2px solid rgba(239, 68, 68, 0.3);
-  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.15);     /* Light red background */
+  color: #dc2626;                          /* Dark red text */
+  border: 2px solid rgba(239, 68, 68, 0.3); /* Red border */
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2); /* Red glow shadow */
 }
 
+/* 
+ * Animated dot indicator inside status badge
+ */
 .status-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: pulse 2s infinite;
+  width: 12px;              /* Fixed width */
+  height: 12px;             /* Fixed height (makes it a perfect circle) */
+  border-radius: 50%;       /* Make it circular */
+  background: currentColor; /* Use the parent's text color */
+  animation: pulse 2s infinite; /* Apply pulse animation continuously */
 }
 
+/* 
+ * Pulse animation keyframes - makes the dot grow and fade
+ */
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.1); }
+  0%, 100% { 
+    opacity: 1;           /* Full opacity at start and end */
+    transform: scale(1);  /* Normal size */
+  }
+  50% { 
+    opacity: 0.7;         /* Slightly transparent in middle */
+    transform: scale(1.1); /* 10% larger */
+  }
 }
 
+/* 
+ * Error message styling
+ */
 .error-message {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  margin-top: 1rem;
-  font-weight: 500;
+  background: rgba(239, 68, 68, 0.1);      /* Light red background */
+  color: #dc2626;                          /* Red text */
+  padding: 1rem 2rem;                      /* Internal spacing */
+  border-radius: 12px;                     /* Rounded corners */
+  border: 1px solid rgba(239, 68, 68, 0.3); /* Red border */
+  margin-top: 1rem;                        /* Space above */
+  font-weight: 500;                        /* Medium font weight */
 }
 
-/* Controls */
+/* ========================================
+   CONTROL BUTTONS SECTION
+   ======================================== */
+
+/* 
+ * Container for control buttons (Start/Stop recording, etc.)
+ */
 .controls {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-bottom: 3rem;
-  flex-wrap: wrap;
+  display: flex;           /* Flexbox layout */
+  gap: 1rem;              /* Space between buttons */
+  justify-content: center; /* Center buttons horizontally */
+  margin-bottom: 3rem;    /* Space below controls */
+  flex-wrap: wrap;        /* Allow buttons to wrap to next line on small screens */
 }
 
-/* Buttons */
+/* ========================================
+   BUTTON STYLES
+   ======================================== */
+
+/* 
+ * Base button styling - applies to all buttons
+ */
 .btn {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 2rem;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 160px;
-  justify-content: center;
-  text-decoration: none;
-  position: relative;
-  overflow: hidden;
+  display: flex;              /* Flexbox for internal layout */
+  align-items: center;        /* Center content vertically */
+  gap: 0.75rem;              /* Space between icon and text */
+  padding: 1rem 2rem;        /* Internal spacing */
+  border: none;              /* Remove default button border */
+  border-radius: 12px;       /* Rounded corners */
+  font-size: 1rem;           /* Font size */
+  font-weight: 600;          /* Semi-bold text */
+  cursor: pointer;           /* Show pointer cursor on hover */
+  transition: all 0.3s ease; /* Smooth transitions for all properties */
+  min-width: 160px;          /* Minimum button width */
+  justify-content: center;   /* Center content horizontally */
+  text-decoration: none;     /* Remove underline if used as link */
+  position: relative;        /* For absolute positioning of child elements */
+  overflow: hidden;          /* Hide content that overflows button bounds */
 }
 
+/* 
+ * Disabled button state
+ */
 .btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
+  opacity: 0.5;                    /* Make button semi-transparent */
+  cursor: not-allowed;             /* Show "not allowed" cursor */
+  transform: none !important;      /* Disable hover animations (!important overrides other rules) */
 }
 
+/* 
+ * Primary button styling (main action buttons)
+ */
 .btn-primary {
+  /* Gradient background from light green to dark green */
   background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+  color: white;                                        /* White text */
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);    /* Green glow shadow */
 }
 
+/* 
+ * Primary button hover effect
+ */
 .btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);                      /* Move button up 2px */
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);  /* Stronger shadow */
 }
 
+/* 
+ * Recording state for primary button (when actively recording)
+ */
 .btn-primary.recording {
+  /* Change to red gradient when recording */
   background: linear-gradient(135deg, #ef4444, #dc2626);
-  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
-  animation: recordingPulse 2s infinite;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);    /* Red glow */
+  animation: recordingPulse 2s infinite;             /* Apply pulsing animation */
 }
 
+/* 
+ * Recording pulse animation - makes button subtly grow/shrink
+ */
 @keyframes recordingPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%, 100% { transform: scale(1); }      /* Normal size at start/end */
+  50% { transform: scale(1.05); }        /* 5% larger in middle */
 }
 
+/* 
+ * Secondary button styling (less important actions)
+ */
 .btn-secondary {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);  /* Purple gradient */
   color: white;
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);        /* Purple glow */
 }
 
+/* 
+ * Secondary button hover effect
+ */
 .btn-secondary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
 }
 
+/* 
+ * Outline button styling (transparent with border)
+ */
 .btn-outline {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);     /* Semi-transparent white background */
+  color: white;                              /* White text */
+  border: 2px solid rgba(255, 255, 255, 0.3); /* Semi-transparent border */
+  backdrop-filter: blur(10px);               /* Blur background behind button */
 }
 
+/* 
+ * Outline button hover effect
+ */
 .btn-outline:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.2);     /* Slightly more opaque on hover */
+  transform: translateY(-2px);              /* Move up on hover */
 }
 
+/* 
+ * Small button variant
+ */
 .btn-small {
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9rem;
-  min-width: 140px;
-  background: rgba(255, 255, 255, 0.15);
+  padding: 0.75rem 1.5rem;                  /* Smaller padding */
+  font-size: 0.9rem;                        /* Smaller font */
+  min-width: 140px;                         /* Smaller minimum width */
+  background: rgba(255, 255, 255, 0.15);    /* Light transparent background */
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Thin border */
   backdrop-filter: blur(10px);
 }
 
+/* 
+ * Small button hover effect
+ */
 .btn-small:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
+  transform: translateY(-1px);              /* Smaller movement than regular buttons */
 }
 
-/* Content Grid */
+/* ========================================
+   CONTENT GRID LAYOUT
+   ======================================== */
+
+/* 
+ * Two-column grid for main content panels
+ */
 .content-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  margin-bottom: 3rem;
+  display: grid;                    /* CSS Grid layout */
+  grid-template-columns: 1fr 1fr;   /* Two equal columns (1fr = 1 fraction of available space) */
+  gap: 2rem;                       /* Space between grid items */
+  margin-bottom: 3rem;             /* Space below the grid */
 }
 
-/* Panels */
+/* ========================================
+   PANEL COMPONENTS
+   ======================================== */
+
+/* 
+ * Base panel styling (for transcription and summary boxes)
+ */
 .panel {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.95);    /* Almost opaque white background */
+  border-radius: 16px;                      /* Rounded corners */
+  overflow: hidden;                         /* Hide content that overflows panel */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  backdrop-filter: blur(20px);              /* Blur background behind panel */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Light border */
 }
 
+/* 
+ * Panel header (title bar of each panel)
+ */
 .panel-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1.5rem 2rem;
-  background: rgba(0, 0, 0, 0.05);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  position: relative;
+  display: flex;                            /* Flexbox layout */
+  align-items: center;                      /* Center items vertically */
+  gap: 0.75rem;                            /* Space between items */
+  padding: 1.5rem 2rem;                    /* Internal spacing */
+  background: rgba(0, 0, 0, 0.05);         /* Very light dark background */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Bottom border */
+  position: relative;                       /* For absolute positioning of children */
 }
 
+/* 
+ * Panel title styling
+ */
 .panel-header h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-  flex: 1;
+  font-size: 1.25rem;     /* Larger than normal text */
+  font-weight: 600;       /* Semi-bold */
+  color: #1f2937;         /* Dark gray color */
+  flex: 1;               /* Take up remaining space in flex container */
 }
 
+/* 
+ * Copy button in panel headers
+ */
 .copy-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 8px;
-  color: #6b7280;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: none;       /* No background */
+  border: none;          /* No border */
+  cursor: pointer;       /* Pointer cursor */
+  padding: 0.5rem;       /* Small padding */
+  border-radius: 8px;    /* Rounded corners */
+  color: #6b7280;        /* Gray color */
+  transition: all 0.2s ease; /* Quick transitions */
+  display: flex;         /* Flexbox for centering */
+  align-items: center;   /* Center vertically */
+  justify-content: center; /* Center horizontally */
 }
 
+/* 
+ * Copy button hover effect
+ */
 .copy-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #374151;
+  background: rgba(0, 0, 0, 0.1);  /* Light background on hover */
+  color: #374151;                  /* Darker text on hover */
 }
 
-/* Transcription Box */
+/* ========================================
+   TRANSCRIPTION BOX
+   ======================================== */
+
+/* 
+ * Container for transcribed text
+ */
 .transcription-box {
-  padding: 2rem;
-  min-height: 300px;
-  font-size: 1.1rem;
-  line-height: 1.7;
-  color: #1f2937;
+  padding: 2rem;        /* Internal spacing */
+  min-height: 300px;    /* Minimum height to prevent jumping */
+  font-size: 1.1rem;    /* Slightly larger text */
+  line-height: 1.7;     /* Increased line spacing for readability */
+  color: #1f2937;       /* Dark gray text */
 }
 
+/* 
+ * Styling for finalized transcription text
+ */
 .final-text {
-  color: #1f2937;
-  font-weight: 500;
+  color: #1f2937;       /* Dark color for confirmed text */
+  font-weight: 500;     /* Medium font weight */
 }
 
+/* 
+ * Styling for interim (temporary) transcription text
+ */
 .interim-text {
-  color: #6b7280;
-  font-style: italic;
-  opacity: 0.8;
+  color: #6b7280;       /* Lighter gray for temporary text */
+  font-style: italic;   /* Italic to show it's temporary */
+  opacity: 0.8;         /* Slightly transparent */
 }
 
+/* 
+ * Placeholder text when no transcription is available
+ */
 .placeholder {
-  color: #9ca3af;
-  font-style: italic;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  min-height: 200px;
-  text-align: center;
+  color: #9ca3af;          /* Light gray color */
+  font-style: italic;      /* Italic style */
+  display: flex;           /* Flexbox for centering */
+  align-items: center;     /* Center vertically */
+  justify-content: center; /* Center horizontally */
+  height: 100%;           /* Full height of container */
+  min-height: 200px;      /* Minimum height */
+  text-align: center;     /* Center text */
 }
 
-/* Summary Box */
+/* ========================================
+   SUMMARY BOX
+   ======================================== */
+
+/* 
+ * Container for AI-generated summary
+ */
 .summary-box {
-  padding: 2rem;
-  min-height: 300px;
+  padding: 2rem;        /* Internal spacing */
+  min-height: 300px;    /* Minimum height */
 }
 
+/* 
+ * Loading state for summary generation
+ */
 .loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  gap: 1rem;
+  display: flex;           /* Flexbox layout */
+  flex-direction: column;  /* Stack items vertically */
+  align-items: center;     /* Center horizontally */
+  justify-content: center; /* Center vertically */
+  height: 200px;          /* Fixed height */
+  gap: 1rem;              /* Space between items */
 }
 
+/* 
+ * Loading spinner animation
+ */
 .spinner {
-  width: 40px;
+  width: 40px;                           /* Spinner size */
   height: 40px;
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #8b5cf6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  border: 4px solid #e5e7eb;            /* Light gray border */
+  border-top: 4px solid #8b5cf6;        /* Purple top border */
+  border-radius: 50%;                   /* Make it circular */
+  animation: spin 1s linear infinite;    /* Continuous spinning */
 }
 
+/* 
+ * Spin animation keyframes
+ */
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% { transform: rotate(0deg); }      /* Start at 0 degrees */
+  100% { transform: rotate(360deg); }   /* End at 360 degrees (full rotation) */
 }
 
+/* 
+ * Summary content container
+ */
 .summary-content {
-  color: #1f2937;
+  color: #1f2937;       /* Dark text color */
 }
 
+/* 
+ * Individual summary sections
+ */
 .summary-section {
-  margin-bottom: 2rem;
+  margin-bottom: 2rem;  /* Space between sections */
 }
 
 .summary-section:last-child {
-  margin-bottom: 0;
+  margin-bottom: 0;     /* No margin on last section */
 }
 
+/* 
+ * Summary section headings
+ */
 .summary-section h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  color: #374151;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  font-size: 1.1rem;       /* Slightly larger font */
+  font-weight: 600;        /* Semi-bold */
+  margin-bottom: 0.75rem;  /* Space below heading */
+  color: #374151;          /* Dark gray */
+  display: flex;           /* Flexbox for icon alignment */
+  align-items: center;     /* Center vertically */
+  gap: 0.5rem;            /* Space between icon and text */
 }
 
+/* 
+ * Summary section paragraphs
+ */
 .summary-section p {
-  line-height: 1.6;
-  margin-bottom: 1rem;
+  line-height: 1.6;       /* Good line spacing */
+  margin-bottom: 1rem;    /* Space below paragraphs */
 }
 
+/* 
+ * Summary section lists
+ */
 .summary-section ul {
-  list-style: none;
-  padding: 0;
+  list-style: none;       /* Remove default bullet points */
+  padding: 0;            /* Remove default padding */
 }
 
+/* 
+ * Summary section list items
+ */
 .summary-section li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  line-height: 1.5;
+  padding: 0.5rem 0;                           /* Vertical padding */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Light separator line */
+  line-height: 1.5;                            /* Line spacing */
 }
 
 .summary-section li:last-child {
-  border-bottom: none;
+  border-bottom: none;    /* No border on last item */
 }
 
+/* 
+ * Special styling for responsible person mentions
+ */
 .responsible {
-  color: #6b7280;
-  font-weight: 500;
+  color: #6b7280;         /* Gray color */
+  font-weight: 500;       /* Medium weight */
 }
 
+/* 
+ * Special styling for deadline mentions
+ */
 .deadline {
-  color: #dc2626;
-  font-weight: 500;
+  color: #dc2626;         /* Red color for urgency */
+  font-weight: 500;       /* Medium weight */
 }
 
+/* 
+ * Error state styling
+ */
 .error p {
-  color: #dc2626;
-  font-weight: 500;
+  color: #dc2626;         /* Red color */
+  font-weight: 500;       /* Medium weight */
 }
 
-/* Quick Actions */
+/* ========================================
+   QUICK ACTIONS SECTION
+   ======================================== */
+
+/* 
+ * Container for quick action buttons
+ */
 .quick-actions {
-  text-align: center;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;                          /* Center all content */
+  padding: 2rem;                              /* Internal spacing */
+  background: rgba(255, 255, 255, 0.1);       /* Semi-transparent background */
+  border-radius: 16px;                        /* Rounded corners */
+  backdrop-filter: blur(20px);                /* Blur background */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Light border */
 }
 
+/* 
+ * Quick actions heading
+ */
 .quick-actions h3 {
-  color: white;
-  margin-bottom: 1.5rem;
-  font-size: 1.3rem;
+  color: white;           /* White text */
+  margin-bottom: 1.5rem;  /* Space below heading */
+  font-size: 1.3rem;      /* Larger font size */
 }
 
+/* 
+ * Container for action buttons
+ */
 .action-buttons {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
+  display: flex;           /* Flexbox layout */
+  gap: 1rem;              /* Space between buttons */
+  justify-content: center; /* Center buttons */
+  flex-wrap: wrap;        /* Allow wrapping on small screens */
 }
 
-/* 🆕 NEW: Enhanced Features Status Styles */
+/* ========================================
+   ENHANCED FEATURES STATUS
+   ======================================== */
+
+/* 
+ * Container for enhanced features status display
+ */
 .features-status {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin: 1rem 0;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+  background: rgba(255, 255, 255, 0.1);       /* Semi-transparent background */
+  backdrop-filter: blur(20px);                /* Blur effect */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Light border */
+  border-radius: 16px;                        /* Rounded corners */
+  padding: 1.5rem;                           /* Internal spacing */
+  margin: 1rem 0;                            /* Vertical margin */
+  max-width: 600px;                          /* Maximum width */
+  margin-left: auto;                         /* Center horizontally */
+  margin-right: auto;                        /* Center horizontally */
 }
 
+/* 
+ * Features status heading
+ */
 .features-status h4 {
-  color: white;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-  text-align: center;
+  color: white;           /* White text */
+  margin-bottom: 1rem;    /* Space below */
+  font-size: 1.1rem;      /* Font size */
+  text-align: center;     /* Center text */
 }
 
+/* 
+ * Container for feature badges
+ */
 .feature-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-bottom: 1rem;
+  display: flex;           /* Flexbox layout */
+  flex-wrap: wrap;        /* Allow wrapping */
+  gap: 0.5rem;           /* Space between badges */
+  justify-content: center; /* Center badges */
+  margin-bottom: 1rem;    /* Space below */
 }
 
+/* 
+ * Individual feature badge styling
+ */
 .feature-badge {
-  background: rgba(34, 197, 94, 0.2);
-  color: #16a34a;
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  white-space: nowrap;
+  background: rgba(34, 197, 94, 0.2);         /* Light green background */
+  color: #16a34a;                            /* Dark green text */
+  padding: 0.4rem 0.8rem;                    /* Internal spacing */
+  border-radius: 20px;                       /* Very rounded (pill shape) */
+  font-size: 0.85rem;                        /* Smaller font */
+  font-weight: 600;                          /* Semi-bold */
+  border: 1px solid rgba(34, 197, 94, 0.3);  /* Green border */
+  white-space: nowrap;                       /* Prevent text wrapping */
 }
 
+/* 
+ * Speaker information section
+ */
 .speaker-info {
-  text-align: center;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;                          /* Center content */
+  margin-top: 1rem;                           /* Space above */
+  padding-top: 1rem;                          /* Internal top padding */
+  border-top: 1px solid rgba(255, 255, 255, 0.1); /* Top border separator */
 }
 
+/* 
+ * Current speaker indicator
+ */
 .current-speaker {
-  background: rgba(139, 92, 246, 0.2);
-  color: #8b5cf6;
-  padding: 0.6rem 1.2rem;
-  border-radius: 25px;
-  font-weight: 600;
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  display: inline-block;
+  background: rgba(139, 92, 246, 0.2);        /* Light purple background */
+  color: #8b5cf6;                            /* Purple text */
+  padding: 0.6rem 1.2rem;                    /* Internal spacing */
+  border-radius: 25px;                       /* Very rounded */
+  font-weight: 600;                          /* Semi-bold */
+  border: 1px solid rgba(139, 92, 246, 0.3); /* Purple border */
+  display: inline-block;                     /* Inline block for sizing */
 }
 
-/* Responsive Design */
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+/* 
+ * Tablet and smaller desktop screens (1024px and below)
+ */
 @media (max-width: 1024px) {
   .content-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr;  /* Single column instead of two */
   }
   
   .main {
-    padding: 1.5rem;
+    padding: 1.5rem;  /* Reduce padding */
   }
 }
 
+/* 
+ * Mobile and small tablet screens (768px and below)
+ */
 @media (max-width: 768px) {
+  /* Reduce header text sizes */
   .header h1 {
-    font-size: 2rem;
+    font-size: 2rem;    /* Smaller main title */
   }
   
   .header p {
-    font-size: 1rem;
+    font-size: 1rem;    /* Smaller subtitle */
   }
   
+  /* Reduce main content padding */
   .main {
     padding: 1rem;
   }
   
+  /* Stack control buttons vertically */
   .controls {
-    flex-direction: column;
-    align-items: center;
+    flex-direction: column;  /* Vertical stacking */
+    align-items: center;     /* Center buttons */
   }
   
+  /* Make buttons full width on mobile */
   .btn {
-    width: 100%;
-    max-width: 280px;
+    width: 100%;         /* Full width */
+    max-width: 280px;    /* But not too wide */
   }
   
+  /* Stack panel header items vertically */
   .panel-header {
-    flex-direction: column;
-    gap: 1rem;
+    flex-direction: column;  /* Vertical stacking */
+    gap: 1rem;              /* Space between items */
   }
   
+  /* Limit panel content height on mobile */
   .transcription-box,
   .summary-box {
-    max-height: 300px;
+    max-height: 300px;  /* Prevent panels from being too tall */
   }
   
+  /* Stack action buttons vertically */
   .action-buttons {
-    flex-direction: column;
-    gap: 0.75rem;
+    flex-direction: column;  /* Vertical stacking */
+    gap: 0.75rem;           /* Space between buttons */
   }
   
+  /* Adjust small button sizing */
   .btn-small {
-    width: 100%;
-    max-width: 200px;
+    width: 100%;         /* Full width */
+    max-width: 200px;    /* Maximum width */
   }
   
-  /* 🆕 NEW: Responsive styles for enhanced features */
+  /* Responsive adjustments for enhanced features */
   .features-status {
-    padding: 1rem;
-    margin: 0.5rem 0;
+    padding: 1rem;       /* Reduce padding */
+    margin: 0.5rem 0;    /* Reduce margin */
   }
   
   .feature-badges {
-    gap: 0.3rem;
+    gap: 0.3rem;         /* Smaller gaps between badges */
   }
   
   .feature-badge {
-    font-size: 0.75rem;
-    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;  /* Smaller font */
+    padding: 0.3rem 0.6rem; /* Smaller padding */
   }
   
   .current-speaker {
-    font-size: 0.9rem;
-    padding: 0.5rem 1rem;
+    font-size: 0.9rem;   /* Smaller font */
+    padding: 0.5rem 1rem; /* Smaller padding */
   }
 }
 
+/* 
+ * Very small mobile screens (480px and below)
+ */
 @media (max-width: 480px) {
+  /* Further reduce header padding */
   .header {
     padding: 1.5rem 0;
   }
   
+  /* Even smaller header title */
   .header h1 {
     font-size: 1.8rem;
   }
   
+  /* Reduce panel content padding and font size */
   .transcription-box,
   .summary-box {
-    padding: 1rem;
-    font-size: 1rem;
+    padding: 1rem;       /* Less padding */
+    font-size: 1rem;     /* Smaller font */
   }
   
+  /* Reduce quick actions padding */
   .quick-actions {
     padding: 1.5rem;
   }

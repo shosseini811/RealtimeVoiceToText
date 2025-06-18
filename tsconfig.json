@@ -1,37 +1,114 @@
 {
+  // This is the main configuration file for TypeScript
+  // It tells TypeScript how to compile your code and what rules to follow
   "compilerOptions": {
+    
+    // TARGET: What version of JavaScript should TypeScript compile to?
+    // "es5" means it will create JavaScript that works in older browsers
+    // You could also use "es2015", "es2020", etc. for newer JavaScript features
     "target": "es5",
+    
+    // LIB: What built-in JavaScript libraries should TypeScript know about?
+    // This tells TypeScript what functions and objects are available
     "lib": [
-      "dom",
-      "dom.iterable",
-      "es6"
+      "dom",           // Browser APIs like document, window, etc.
+      "dom.iterable",  // Allows using for...of loops with DOM collections
+      "es6"            // ES6/ES2015 JavaScript features like Promise, Map, Set
     ],
+    
+    // ALLOWJS: Can we mix JavaScript files with TypeScript files?
+    // "true" means you can import .js files in your .ts files
+    // This is helpful when migrating from JavaScript to TypeScript
     "allowJs": true,
+    
+    // SKIPLIBCHECK: Should TypeScript check the types in library files?
+    // "true" means skip checking - this makes compilation faster
+    // Library files are the ones in node_modules/@types
     "skipLibCheck": true,
+    
+    // ESMODULEINTEROP: Helps with importing modules that weren't designed for TypeScript
+    // "true" makes it easier to import libraries like React
+    // Without this, you might need to write: import * as React from 'react'
+    // With this, you can write: import React from 'react'
     "esModuleInterop": true,
+    
+    // ALLOWSYNTHETICDEFAULTIMPORTS: Related to esModuleInterop
+    // Allows default imports from modules that don't have a default export
+    // Works together with esModuleInterop to make imports smoother
     "allowSyntheticDefaultImports": true,
+    
+    // STRICT: Should TypeScript be very strict about type checking?
+    // "true" enables all strict type checking options
+    // This catches more potential bugs but requires more careful coding
     "strict": true,
+    
+    // FORCECONSISTENTCASINGINFILENAMES: File names must have consistent capitalization
+    // "true" means "MyFile.ts" and "myfile.ts" are treated as different files
+    // This prevents issues when moving between different operating systems
     "forceConsistentCasingInFileNames": true,
+    
+    // NOFALLTHROUGHCASESINSWITCH: In switch statements, each case must end with break/return
+    // "true" prevents accidentally falling through to the next case
+    // This catches a common bug in switch statements
     "noFallthroughCasesInSwitch": true,
+    
+    // MODULE: What module system should the compiled JavaScript use?
+    // "esnext" means use the latest ES module system (import/export)
+    // Other options: "commonjs" (require/module.exports), "amd", etc.
     "module": "esnext",
+    
+    // MODULERESOLUTION: How should TypeScript find and load modules?
+    // "node" means use Node.js-style module resolution
+    // This is the most common setting and works with npm packages
     "moduleResolution": "node",
+    
+    // RESOLVEJSONMODULE: Can we import JSON files directly?
+    // "true" means you can do: import data from './config.json'
+    // The JSON will be automatically typed
     "resolveJsonModule": true,
+    
+    // ISOLATEDMODULES: Each file should be compilable on its own
+    // "true" ensures compatibility with tools that compile files individually
+    // This is important for build tools like Babel or esbuild
     "isolatedModules": true,
+    
+    // NOEMIT: Should TypeScript generate JavaScript files?
+    // "true" means don't generate .js files - just check types
+    // This is common in React apps where another tool (like Webpack) handles compilation
     "noEmit": true,
+    
+    // JSX: How should TypeScript handle JSX (React's HTML-like syntax)?
+    // "react-jsx" is the modern way (React 17+)
+    // Other options: "react" (older way), "preserve" (leave JSX as-is)
     "jsx": "react-jsx",
+    
+    // TYPEROOTS: Where should TypeScript look for type definition files?
+    // These are files that describe the types for JavaScript libraries
+    // "./node_modules/@types" is where npm installs type definitions
     "typeRoots": ["./node_modules/@types"],
+    
+    // TYPES: What specific type packages should be included?
+    // "node" includes Node.js types (like process, Buffer, etc.)
+    // Even though this is a React app, Node types are useful for build scripts
     "types": ["node"]
   },
+  
+  // INCLUDE: Which files should TypeScript compile?
+  // "src" means all TypeScript files in the src folder and its subfolders
+  // This is where your React components and application code lives
   "include": [
     "src"
   ],
+  
+  // EXCLUDE: Which files should TypeScript ignore?
+  // These folders/files won't be compiled or type-checked
   "exclude": [
-    "node_modules",
-    "build",
-    "scripts",
-    "acceptance-tests",
-    "webpack",
-    "jest",
-    "src/setupTests.ts"
+    "node_modules",        // Third-party packages (already compiled)
+    "build",              // The output folder where compiled code goes
+    "scripts",            // Build scripts (usually JavaScript, not TypeScript)
+    "acceptance-tests",   // Test files that don't need compilation
+    "webpack",           // Webpack configuration files
+    "jest",              // Jest testing configuration files
+    "src/setupTests.ts"  // Test setup file (handled separately by testing framework)
   ]
 } 

@@ -1,18 +1,49 @@
+<!-- This is the HTML5 document type declaration. It tells the browser that this is an HTML5 document -->
 <!DOCTYPE html>
+
+<!-- The root HTML element that contains all other elements on the page -->
+<!-- The 'lang' attribute specifies the language of the document (English in this case) -->
 <html lang="en">
+  
+  <!-- The head section contains metadata about the document that isn't displayed on the page -->
   <head>
+    <!-- Specifies the character encoding for the document (UTF-8 supports most characters) -->
     <meta charset="utf-8" />
+    
+    <!-- Sets the favicon (the small icon that appears in the browser tab) -->
+    <!-- %PUBLIC_URL% is a placeholder that gets replaced with the actual public folder path -->
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    
+    <!-- Controls how the page is displayed on mobile devices -->
+    <!-- width=device-width: makes the page width match the device's screen width -->
+    <!-- initial-scale=1: sets the initial zoom level to 100% -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <!-- Sets the theme color for the browser (used by some mobile browsers for the address bar) -->
     <meta name="theme-color" content="#000000" />
+    
+    <!-- Provides a description of the website for search engines and social media -->
+    <!-- This text may appear in search results or when sharing the link -->
     <meta
       name="description"
       content="AI-powered note taker with real-time transcription and smart summaries"
     />
+    
+    <!-- Sets the title that appears in the browser tab -->
     <title>AI Note Taker</title>
   </head>
+  
+  <!-- The body section contains all the visible content of the webpage -->
   <body>
+    <!-- This message is shown only if JavaScript is disabled in the user's browser -->
+    <!-- Since this is a React app, it requires JavaScript to work properly -->
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    
+    <!-- This is the main container where the React application will be mounted/rendered -->
+    <!-- React will find this element by its ID 'root' and inject all the app content here -->
     <div id="root"></div>
+    
+    <!-- Note: The actual JavaScript files that run the React app are automatically -->
+    <!-- injected here during the build process, so you don't see them in this file -->
   </body>
 </html> 

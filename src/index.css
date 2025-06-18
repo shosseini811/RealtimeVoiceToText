@@ -1,13 +1,78 @@
+/* 
+ * CSS STYLES FOR THE ENTIRE WEBPAGE
+ * This file contains global styles that apply to the whole application
+ */
+
+/* 
+ * BODY ELEMENT STYLING
+ * The body element represents the entire visible content of the webpage
+ * These styles apply to everything you see on the page
+ */
 body {
+  /* Remove default margin (empty space) around the page edges */
+  /* By default, browsers add some space around the page - we remove it */
   margin: 0;
+  
+  /* 
+   * FONT FAMILY STACK
+   * This defines which fonts to use for text on the page
+   * CSS tries each font in order until it finds one that's available
+   * This is called a "font stack" - like a backup plan for fonts
+   */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
+  /* 
+   * EXPLANATION OF EACH FONT:
+   * -apple-system: Uses the default system font on Apple devices (Mac, iPhone, iPad)
+   * BlinkMacSystemFont: Backup for Apple system font
+   * 'Segoe UI': Default font on Windows computers
+   * 'Roboto': Google's font, common on Android devices
+   * 'Oxygen': Font used on some Linux systems
+   * 'Ubuntu': Font from Ubuntu Linux
+   * 'Cantarell': Another Linux system font
+   * 'Fira Sans': Mozilla's open-source font
+   * 'Droid Sans': Older Android font
+   * 'Helvetica Neue': Classic, clean font
+   * sans-serif: Final fallback - any font without decorative lines (serifs)
+   */
+  
+  /* 
+   * FONT SMOOTHING FOR WEBKIT BROWSERS
+   * This makes text look smoother and clearer on Apple devices (Safari, Chrome on Mac)
+   * "antialiased" means it smooths the edges of letters
+   */
   -webkit-font-smoothing: antialiased;
+  
+  /* 
+   * FONT SMOOTHING FOR FIREFOX ON MAC
+   * Similar to above but specifically for Firefox browser on Mac computers
+   * "grayscale" makes text appear smoother by using gray pixels at letter edges
+   */
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* 
+ * CODE ELEMENT STYLING
+ * The <code> HTML element is used to display computer code or programming text
+ * This makes code look different from regular text
+ */
 code {
+  /* 
+   * MONOSPACE FONT FAMILY FOR CODE
+   * Monospace fonts have equal width for each character
+   * This makes code easier to read because characters line up perfectly
+   * Like how text looks in a programming editor
+   */
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+  /* 
+   * EXPLANATION OF EACH CODE FONT:
+   * source-code-pro: Modern font designed specifically for programming
+   * Menlo: Apple's programming font (used in Xcode)
+   * Monaco: Older Apple programming font
+   * Consolas: Microsoft's programming font (used in Visual Studio)
+   * 'Courier New': Classic typewriter-style font, available everywhere
+   * monospace: Final fallback - any font where all characters have equal width
+   */
 } 
