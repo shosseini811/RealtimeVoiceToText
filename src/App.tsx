@@ -161,16 +161,48 @@ function App() {
 
   // 🔍 LOG REF STATUS
   console.log('🔗 Refs Status:', {
+    // WebSocket Reference Details
+    websocketRef: websocketRef,                    // The ref object itself
+    websocketRefCurrent: websocketRef.current,     // The actual WebSocket instance (or null)
     hasWebSocket: !!websocketRef.current,
     websocketReadyState: websocketRef.current?.readyState,
     websocketReadyStateText: websocketRef.current ? 
       ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][websocketRef.current.readyState] : 'null',
+    
+    // Additional WebSocket Properties
+    websocketUrl: websocketRef.current?.url,
+    websocketProtocol: websocketRef.current?.protocol,
+    websocketExtensions: websocketRef.current?.extensions,
+    websocketBufferedAmount: websocketRef.current?.bufferedAmount,
+    
+    // Other Refs
     hasMediaRecorder: !!mediaRecorderRef.current,
     mediaRecorderState: mediaRecorderRef.current?.state,
     hasAudioStream: !!audioStreamRef.current,
     audioStreamActive: audioStreamRef.current?.active,
     audioTrackCount: audioStreamRef.current?.getTracks().length || 0
   });
+
+  // 🔍 SEPARATE DETAILED WEBSOCKET LOG
+  if (websocketRef.current) {
+    console.log('🌐 WebSocket Instance Details:', {
+      websocketObject: websocketRef.current,        // The actual WebSocket object
+      constructor: websocketRef.current.constructor.name,
+      readyState: websocketRef.current.readyState,
+      url: websocketRef.current.url,
+      protocol: websocketRef.current.protocol,
+      extensions: websocketRef.current.extensions,
+      bufferedAmount: websocketRef.current.bufferedAmount,
+      binaryType: websocketRef.current.binaryType,
+      // Event handlers (these will show as functions)
+      onopen: typeof websocketRef.current.onopen,
+      onmessage: typeof websocketRef.current.onmessage,
+      onclose: typeof websocketRef.current.onclose,
+      onerror: typeof websocketRef.current.onerror
+    });
+  } else {
+    console.log('🌐 WebSocket Instance: null (not connected)');
+  }
 
   // 🧹 CLEANUP EFFECT
   // useEffect with empty dependency array [] runs once when component mounts
@@ -213,15 +245,23 @@ function App() {
    * @returns Promise that resolves when connection is established
    */
   const connectWebSocket = (): Promise<void> => {
+    // We'll store a reference to the Promise so we can inspect it later within the function
+    let promiseRef: Promise<void>;
+    
     console.log('🌐 ==================== WEBSOCKET CONNECTION START ====================');
     console.log('🌐 connectWebSocket called');
+    // Log immediately after promiseRef is assigned to view its initial state (<pending>)
+    // Note: The console will update this object's state live in devtools.
+    setTimeout(() => {
+      console.log('📌 [connectWebSocket] Promise state right after creation:', promiseRef);
+    }, 0);
     console.log('📊 WebSocket Info: What is WebSocket?');
     console.log('   • WebSocket = Persistent, bidirectional connection (like a phone call)');
     console.log('   • HTTP = One-time request/response (like sending a letter)');
     console.log('   • WebSocket stays open for real-time communication');
     console.log('   • Perfect for live audio streaming and instant transcription');
     
-    return new Promise((resolve, reject) => {
+    promiseRef = new Promise((resolve, reject) => {
       try {
         console.log('🔄 Setting connection status to Connecting');
         console.log('📊 UI State Update: connectionStatus = "Connecting"');
@@ -267,9 +307,16 @@ function App() {
           console.log('🔄 Updating UI: connectionStatus = "Connected"');
           setConnectionStatus('Connected');
           setError(''); // Clear any previous errors
-          console.log('🔄 Clearing previous errors and resolving promise');
-          console.log('✅ Promise resolved - connection ready for use!');
+          console.log('🔄 Clearing previous errors; about to resolve promise...');
+          console.log('📌 [connectWebSocket] Promise state is currently PENDING. Calling resolve() to fulfill it now.');
+          // Log the promise just before fulfilling
+          console.log('📌 [connectWebSocket] Promise about to be resolved. Current state:', promiseRef);
           resolve(); // Promise succeeds - connection established
+          // Log right after resolve to confirm state change
+          setTimeout(() => {
+            console.log('📌 [connectWebSocket] Promise after resolve call (should be <fulfilled>):', promiseRef);
+          }, 0);
+          console.log('✅ resolve() called. Promise is now FULFILLED and awaiting callers will resume.');
         };
 
         // 📨 MESSAGE RECEIVED - Backend sent us transcription data
@@ -464,6 +511,7 @@ function App() {
         reject(error);
       }
     });
+    return promiseRef;
   };
 
   /**
