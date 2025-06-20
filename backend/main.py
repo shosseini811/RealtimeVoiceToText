@@ -154,10 +154,14 @@ class TranscriptionManager:
         ❌ Paragraphs (Not available in this SDK version) - would break text into paragraphs
         """
         try:
+            print("🚀 [ASYNC] Starting transcription setup...")
             # Store the WebSocket connection so we can send messages back to frontend
             self.websocket = websocket
+            print(f"📡 [ASYNC] WebSocket stored: {id(websocket)}")
+            
             # Store the current event loop for handling async operations
             self.loop = asyncio.get_event_loop()
+            print(f"🔄 [ASYNC] Event loop captured: {id(self.loop)}")
             
             # 🚀 ENHANCED DEEPGRAM OPTIONS - Using supported features only
             # LiveOptions configures how Deepgram processes our audio
@@ -202,14 +206,17 @@ class TranscriptionManager:
             
             # 🚀 START THE CONNECTION
             # FIXED: Don't await the start method - it returns a boolean, not a coroutine
+            print("🔗 [ASYNC] Starting Deepgram connection...")
             result = self.connection.start(options)
             
             if result:
                 # Connection started successfully
                 self.is_connected = True
+                print("✅ [ASYNC] Deepgram connection started successfully!")
                 return True
             else:
                 # Connection failed to start
+                print("❌ [ASYNC] Failed to start Deepgram connection")
                 raise Exception("Failed to start Deepgram connection")
             
         except Exception as e:
@@ -228,13 +235,15 @@ class TranscriptionManager:
         *args and **kwargs allow this function to accept any arguments
         (Deepgram might pass different arguments in different versions)
         """
-        print("Deepgram connection opened")
+        print("🎤 [CALLBACK] Deepgram connection opened (running in callback thread)")
+        print(f"🧵 [CALLBACK] Current thread: {threading.current_thread().name}")
         self.is_connected = True
         # Queue a message to send to the frontend
         self.queue_message({
             "type": "connection_opened",
             "message": "Connected to Deepgram"
         })
+        print("📬 [CALLBACK] Connection opened message queued")
     
     def on_message(self, *args, **kwargs):
         """
@@ -308,10 +317,11 @@ class TranscriptionManager:
                         
                         # Add message to queue to be sent to frontend
                         self.queue_message(message)
+                        print(f"📬 [CALLBACK] Transcription queued: '{sentence[:50]}...' (is_final: {is_final})")
                         
         except Exception as e:
             # If anything goes wrong processing the transcription, log it
-            print(f"Error processing transcription: {e}")
+            print(f"❌ [CALLBACK] Error processing transcription: {e}")
             self.queue_message({
                 "type": "error",
                 "message": f"Error processing transcription: {str(e)}"
@@ -346,9 +356,11 @@ class TranscriptionManager:
         than our main WebSocket connection, so we need a thread-safe way to pass messages
         """
         try:
+            print(f"📥 [QUEUE] Adding message to queue (thread: {threading.current_thread().name})")
             self.message_queue.put_nowait(message)  # Add message to queue without waiting
+            print(f"📊 [QUEUE] Queue size now: {self.message_queue.qsize()}")
         except queue.Full:
-            print("Message queue is full, dropping message")
+            print("⚠️ [QUEUE] Message queue is full, dropping message")
     
     async def process_messages(self):
         """
@@ -357,22 +369,33 @@ class TranscriptionManager:
         This runs continuously in the background, checking for new messages
         and sending them through the WebSocket connection
         """
+        print(f"🔄 [PROCESSOR] Message processor started (thread: {threading.current_thread().name})")
+        message_count = 0
+        
         while True:
             try:
                 # Check if there are any messages in the queue
                 if not self.message_queue.empty():
                     message = self.message_queue.get_nowait()  # Get message without waiting
+                    message_count += 1
+                    
+                    print(f"📤 [PROCESSOR] Processing message #{message_count}: {message.get('type', 'unknown')}")
                     
                     # Send message to frontend if WebSocket is still connected
                     if self.websocket:
                         await self.websocket.send_text(json.dumps(message))
+                        print(f"✅ [PROCESSOR] Message sent via WebSocket")
+                    else:
+                        print("⚠️ [PROCESSOR] No WebSocket connection available")
                 
                 # Wait a tiny bit before checking again (prevents busy waiting)
                 await asyncio.sleep(0.01)  # 10 milliseconds
                 
             except Exception as e:
-                print(f"Error processing messages: {e}")
+                print(f"❌ [PROCESSOR] Error processing messages: {e}")
                 break
+        
+        print("🛑 [PROCESSOR] Message processor stopped")
     
     def send_audio(self, audio_data: bytes):
         """
@@ -590,15 +613,24 @@ async def websocket_endpoint(websocket: WebSocket):
     """
     # 🤝 ACCEPT THE WEBSOCKET CONNECTION
     # This tells the frontend "Yes, I'm ready to communicate"
+    # Send the 101 Switching Protocols response to complete the WebSocket handshake.
+    # After this coroutine completes, the connection state becomes "OPEN" and both
+    # client and server can freely exchange WebSocket frames.
     await websocket.accept()
     
     # Initialize variables to track our connections
-    transcription_manager = None  # Will hold our Deepgram connection
-    message_task = None          # Will hold the background task that processes messages
+    # Placeholders that will be populated once the handshake succeeds:
+    #   • transcription_manager → manages the audio stream to Deepgram for THIS socket
+    #   • message_task         → background asyncio Task that forwards transcripts
+    transcription_manager = None
+    message_task = None
     
     try:
         # 🎙️ CREATE AND START TRANSCRIPTION MANAGER
         # This sets up the connection to Deepgram's AI transcription service
+        # Instantiate a dedicated TranscriptionManager for this client connection.
+        # This keeps concurrent browser sessions isolated from each other.
+        print(f"🏗️ [WEBSOCKET] Creating new TranscriptionManager for WebSocket {id(websocket)}")
         transcription_manager = TranscriptionManager()
         success = await transcription_manager.start_transcription(websocket)
         
@@ -621,22 +653,31 @@ async def websocket_endpoint(websocket: WebSocket):
         # 🚀 START BACKGROUND MESSAGE PROCESSING
         # This task runs in parallel, continuously checking for messages from Deepgram
         # and sending them to the frontend
+        print(f"🚀 [WEBSOCKET] Starting background message processing task...")
         message_task = asyncio.create_task(transcription_manager.process_messages())
+        print(f"✅ [WEBSOCKET] Background task created: {id(message_task)}")
         
         # 🔄 MAIN LOOP - RECEIVE AUDIO DATA
         # This loop runs continuously, waiting for audio data from the frontend
+        print("🔄 [WEBSOCKET] Starting main audio receive loop...")
+        audio_chunk_count = 0
+        
         while True:
             try:
                 # Wait for audio data from the frontend
                 # receive_bytes() gets raw audio data (not text)
                 data = await websocket.receive_bytes()
+                audio_chunk_count += 1
+                
+                if audio_chunk_count % 50 == 0:  # Print every 50th chunk to avoid spam
+                    print(f"🎵 [WEBSOCKET] Received audio chunk #{audio_chunk_count} ({len(data)} bytes)")
                 
                 # Forward the audio data to Deepgram for transcription
                 transcription_manager.send_audio(data)
                 
             except WebSocketDisconnect:
                 # This happens when the user closes their browser or stops recording
-                print("Client disconnected")
+                print(f"🔌 [WEBSOCKET] Client disconnected (processed {audio_chunk_count} audio chunks)")
                 break
                 
             except Exception as e:
@@ -664,20 +705,25 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         # 🧹 CLEANUP - This always runs when the connection ends
         # Clean up all resources to prevent memory leaks
+        print("🧹 [WEBSOCKET] Starting cleanup process...")
         
         # Cancel the background message processing task
         if message_task:
+            print("🛑 [WEBSOCKET] Canceling background message task...")
             message_task.cancel()
             try:
                 await message_task  # Wait for it to finish canceling
+                print("✅ [WEBSOCKET] Background task canceled successfully")
             except asyncio.CancelledError:
+                print("✅ [WEBSOCKET] Background task cancellation confirmed")
                 pass  # This is expected when canceling a task
         
         # Close the Deepgram connection
         if transcription_manager:
+            print("🔌 [WEBSOCKET] Closing Deepgram connection...")
             transcription_manager.close()
         
-        print("WebSocket connection closed and cleaned up")
+        print("✅ [WEBSOCKET] WebSocket connection closed and cleaned up")
 
 # 📝 HTTP POST ENDPOINT FOR AI SUMMARIES
 # This endpoint receives transcribed text and returns AI-generated summaries
