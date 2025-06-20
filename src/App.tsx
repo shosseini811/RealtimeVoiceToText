@@ -68,16 +68,27 @@ function App() {
   // ⏳ LOADING STATE: shows spinner/loading text when generating summary
   const [isGeneratingSummary, setIsGeneratingSummary] = useState<boolean>(false);
 
-  // 📊 LOG CURRENT STATE VALUES
+  // 📊 LOG CURRENT STATE VALUES - Debug information about our component state
+  // This helps us track how our useState variables change over time
   console.log('📊 Current State Values:', {
-    isRecording,
-    transcriptionLength: transcription.length,
-    interimTextLength: interimText.length,
-    connectionStatus,
-    hasError: !!error,
-    errorMessage: error,
-    hasAiSummary: !!aiSummary,
-    isGeneratingSummary
+    
+    // 🎤 RECORDING STATE
+    isRecording,                           // Boolean: Are we currently recording audio? (true/false)
+    
+    // 📝 TEXT STATE  
+    transcriptionLength: transcription.length,    // Number: How many characters in final transcription
+    interimTextLength: interimText.length,        // Number: How many characters in live preview text
+    
+    // 🔗 CONNECTION STATE
+    connectionStatus,                      // String: Current WebSocket connection status ("Connected", "Disconnected", etc.)
+    
+    // ⚠️ ERROR STATE
+    hasError: !!error,                     // Boolean: Do we have any error message? (!!) converts to true/false
+    errorMessage: error,                   // String: The actual error message (empty string if no error)
+    
+    // 🤖 AI SUMMARY STATE
+    hasAiSummary: !!aiSummary,            // Boolean: Do we have an AI summary generated?
+    isGeneratingSummary                    // Boolean: Are we currently generating a summary?
   });
 
   // 🔗 REFS FOR PERSISTENT OBJECTS
@@ -159,49 +170,81 @@ function App() {
   // 3. null again (when we stop all tracks and cleanup)
   const audioStreamRef = useRef<MediaStream | null>(null);
 
-  // 🔍 LOG REF STATUS
+  // 🔍 LOG REF STATUS - Debug information about our persistent objects
+  // This console.log helps us understand what's happening with our refs during development
   console.log('🔗 Refs Status:', {
-    // WebSocket Reference Details
-    websocketRef: websocketRef,                    // The ref object itself
-    websocketRefCurrent: websocketRef.current,     // The actual WebSocket instance (or null)
-    hasWebSocket: !!websocketRef.current,
-    websocketReadyState: websocketRef.current?.readyState,
-    websocketReadyStateText: websocketRef.current ? 
+    
+    // 🌐 WEBSOCKET REFERENCE DETAILS
+    // These help us understand the WebSocket connection state
+    
+    websocketRef: websocketRef,                    // The useRef container itself (always exists)
+    websocketRefCurrent: websocketRef.current,     // The actual WebSocket object inside the ref (null when disconnected)
+    hasWebSocket: !!websocketRef.current,          // Boolean: Do we have a WebSocket? (!!) converts to true/false
+    
+    // WebSocket Connection States (0-3 numbers that tell us connection status)
+    websocketReadyState: websocketRef.current?.readyState,  // Raw number: 0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED
+    websocketReadyStateText: websocketRef.current ?         // Human-readable version of the state
       ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][websocketRef.current.readyState] : 'null',
     
-    // Additional WebSocket Properties
-    websocketUrl: websocketRef.current?.url,
-    websocketProtocol: websocketRef.current?.protocol,
-    websocketExtensions: websocketRef.current?.extensions,
-    websocketBufferedAmount: websocketRef.current?.bufferedAmount,
+    // 📊 ADDITIONAL WEBSOCKET PROPERTIES
+    // These give us more detailed info about the WebSocket connection
     
-    // Other Refs
-    hasMediaRecorder: !!mediaRecorderRef.current,
-    mediaRecorderState: mediaRecorderRef.current?.state,
-    hasAudioStream: !!audioStreamRef.current,
-    audioStreamActive: audioStreamRef.current?.active,
-    audioTrackCount: audioStreamRef.current?.getTracks().length || 0
+    websocketUrl: websocketRef.current?.url,               // The URL we connected to (e.g., "ws://localhost:8000/ws")
+    websocketProtocol: websocketRef.current?.protocol,     // Sub-protocol used (usually empty string)
+    websocketExtensions: websocketRef.current?.extensions, // WebSocket extensions (usually empty string)
+    websocketBufferedAmount: websocketRef.current?.bufferedAmount, // Bytes waiting to be sent (should be 0 usually)
+    
+    // 🎙️ MEDIARECORDER REFERENCE DETAILS
+    // These help us understand the audio recording state
+    
+    hasMediaRecorder: !!mediaRecorderRef.current,          // Boolean: Do we have a MediaRecorder object?
+    mediaRecorderState: mediaRecorderRef.current?.state,   // Recording state: "inactive", "recording", "paused"
+    
+    // 🔊 AUDIO STREAM REFERENCE DETAILS  
+    // These help us understand the microphone stream state
+    
+    hasAudioStream: !!audioStreamRef.current,              // Boolean: Do we have access to microphone?
+    audioStreamActive: audioStreamRef.current?.active,     // Boolean: Is the microphone stream still active?
+    audioTrackCount: audioStreamRef.current?.getTracks().length || 0  // Number of audio tracks (usually 1 for mono)
   });
 
-  // 🔍 SEPARATE DETAILED WEBSOCKET LOG
+  // 🔍 SEPARATE DETAILED WEBSOCKET LOG - Deep dive into WebSocket object properties
+  // This gives us a complete picture of the WebSocket instance when it exists
   if (websocketRef.current) {
     console.log('🌐 WebSocket Instance Details:', {
-      websocketObject: websocketRef.current,        // The actual WebSocket object
-      constructor: websocketRef.current.constructor.name,
-      readyState: websocketRef.current.readyState,
-      url: websocketRef.current.url,
-      protocol: websocketRef.current.protocol,
-      extensions: websocketRef.current.extensions,
-      bufferedAmount: websocketRef.current.bufferedAmount,
-      binaryType: websocketRef.current.binaryType,
-      // Event handlers (these will show as functions)
-      onopen: typeof websocketRef.current.onopen,
-      onmessage: typeof websocketRef.current.onmessage,
-      onclose: typeof websocketRef.current.onclose,
-      onerror: typeof websocketRef.current.onerror
+      
+      // 🏗️ OBJECT INFORMATION
+      websocketObject: websocketRef.current,        // The actual WebSocket object (you can expand this in dev tools)
+      constructor: websocketRef.current.constructor.name,  // Always "WebSocket" - confirms object type
+      
+      // 📊 CONNECTION STATUS
+      readyState: websocketRef.current.readyState,          // Number 0-3: Current connection state
+      // 0 = CONNECTING (trying to connect)
+      // 1 = OPEN (connected and ready)  
+      // 2 = CLOSING (connection is closing)
+      // 3 = CLOSED (connection is closed)
+      
+      // 🔗 CONNECTION DETAILS
+      url: websocketRef.current.url,                        // Full WebSocket URL (e.g., "ws://localhost:8000/ws")
+      protocol: websocketRef.current.protocol,              // Sub-protocol negotiated during handshake (usually empty)
+      extensions: websocketRef.current.extensions,          // WebSocket extensions selected by server (usually empty)
+      
+      // 📤 SEND BUFFER STATUS
+      bufferedAmount: websocketRef.current.bufferedAmount,  // Bytes waiting to be sent (should be 0 for real-time)
+      
+      // 📁 DATA FORMAT
+      binaryType: websocketRef.current.binaryType,          // How binary data is received: "blob" or "arraybuffer"
+      
+      // 🎯 EVENT HANDLERS (these show as "function" or "null")
+      // These are the callback functions we set up to handle WebSocket events
+      onopen: typeof websocketRef.current.onopen,           // Function called when connection opens
+      onmessage: typeof websocketRef.current.onmessage,     // Function called when message arrives
+      onclose: typeof websocketRef.current.onclose,         // Function called when connection closes  
+      onerror: typeof websocketRef.current.onerror          // Function called when error occurs
     });
   } else {
     console.log('🌐 WebSocket Instance: null (not connected)');
+    console.log('💡 This means we either haven\'t connected yet, or the connection was closed/failed');
   }
 
   // 🧹 CLEANUP EFFECT
@@ -534,12 +577,25 @@ function App() {
    */
   const startRecording = async () => {
     console.log('🎙️ startRecording called');
-    console.log('📊 Pre-recording state:', {
-      isRecording,
-      connectionStatus,
-      hasWebSocket: !!websocketRef.current,
-      hasMediaRecorder: !!mediaRecorderRef.current,
-      hasAudioStream: !!audioStreamRef.current
+    console.log('📊 Pre-recording state check - What we have before starting:', {
+      
+      // 🎤 CURRENT RECORDING STATUS
+      isRecording,                           // Boolean: Should be false (we're about to start)
+      
+      // 🔗 CONNECTION STATUS  
+      connectionStatus,                      // String: Current connection state
+      hasWebSocket: !!websocketRef.current, // Boolean: Do we already have a WebSocket connection?
+      
+      // 🎬 RECORDING EQUIPMENT STATUS
+      hasMediaRecorder: !!mediaRecorderRef.current,  // Boolean: Do we have a MediaRecorder from previous session?
+      hasAudioStream: !!audioStreamRef.current       // Boolean: Do we have microphone access from previous session?
+      
+      // 💡 WHAT WE EXPECT:
+      // - isRecording should be false (we're starting)
+      // - connectionStatus should be "Disconnected" (we haven't connected yet)
+      // - hasWebSocket should be false (no connection yet)
+      // - hasMediaRecorder should be false (no recorder yet)
+      // - hasAudioStream should be false (no microphone access yet)
     });
 
     try {
@@ -569,16 +625,28 @@ function App() {
         } 
       });
       
-      console.log('✅ Microphone access granted:', {
-        streamId: stream.id,
-        streamActive: stream.active,
-        trackCount: stream.getTracks().length,
+      console.log('✅ Microphone access granted - Details about the audio stream:', {
+        
+        // 🆔 STREAM IDENTIFICATION
+        streamId: stream.id,                   // Unique ID for this MediaStream instance
+        streamActive: stream.active,           // Boolean: Is the stream currently active?
+        
+        // 📊 STREAM COMPOSITION
+        trackCount: stream.getTracks().length, // Total number of tracks (audio + video, usually just 1 audio)
+        
+        // 🎵 AUDIO TRACK DETAILS
+        // Each audio track represents a channel of audio data from a source (microphone)
         audioTracks: stream.getAudioTracks().map(track => ({
-          id: track.id,
-          label: track.label,
-          enabled: track.enabled,
-          readyState: track.readyState
+          id: track.id,                        // Unique ID for this audio track
+          label: track.label,                  // Human-readable name (e.g., "Built-in Microphone")
+          enabled: track.enabled,              // Boolean: Is this track enabled? (should be true)
+          readyState: track.readyState         // String: "live" = working, "ended" = stopped
         }))
+        
+        // 💡 WHAT THIS MEANS:
+        // - We now have a "pipe" of live audio data from the user's microphone
+        // - This stream will be fed into MediaRecorder to create audio chunks
+        // - Each track represents one audio channel (mono = 1 track, stereo = 2 tracks)
       });
       
       // Store the audio stream for later cleanup
@@ -591,10 +659,20 @@ function App() {
         mimeType: 'audio/webm;codecs=opus'
       });
       
-      console.log('📊 MediaRecorder created:', {
-        state: mediaRecorder.state,
-        mimeType: mediaRecorder.mimeType,
-        audioBitsPerSecond: mediaRecorder.audioBitsPerSecond
+      console.log('📊 MediaRecorder created - Details about the audio recorder:', {
+        
+        // 📊 RECORDER STATUS
+        state: mediaRecorder.state,                    // String: Current recorder state ("inactive", "recording", "paused")
+        
+        // 🎵 AUDIO FORMAT SETTINGS
+        mimeType: mediaRecorder.mimeType,              // String: Audio format (e.g., "audio/webm;codecs=opus")
+        audioBitsPerSecond: mediaRecorder.audioBitsPerSecond, // Number: Audio quality in bits per second
+        
+        // 💡 WHAT THIS MEANS:
+        // - MediaRecorder is ready to convert live audio into compressed audio chunks
+        // - WebM with Opus codec provides good compression for real-time streaming
+        // - State "inactive" means it's created but not recording yet
+        // - We'll call start() next to begin recording
       });
       
       mediaRecorderRef.current = mediaRecorder;
@@ -704,13 +782,30 @@ function App() {
     console.log('🛑 stopRecording called');
     
     try {
-      // 🔍 DEBUG: Log initial stopRecording state
-      console.log('🛑 stopRecording called', {
-        isRecording,
-        mediaRecorderState: mediaRecorderRef.current?.state,
-        hasAudioStream: !!audioStreamRef.current,
-        hasWebSocket: !!websocketRef.current,
-        transcriptionLength: transcription.length,
+      // 🔍 DEBUG: Log initial stopRecording state - What we have when stopping
+      console.log('🛑 stopRecording called - Current state before cleanup:', {
+        
+        // 🎤 RECORDING STATUS
+        isRecording,                                    // Boolean: Should be true (we're currently recording)
+        
+        // 🎬 MEDIARECORDER STATUS
+        mediaRecorderState: mediaRecorderRef.current?.state,  // String: Should be "recording" if active
+        
+        // 🔊 AUDIO STREAM STATUS  
+        hasAudioStream: !!audioStreamRef.current,      // Boolean: Do we have microphone access?
+        
+        // 🌐 WEBSOCKET STATUS
+        hasWebSocket: !!websocketRef.current,          // Boolean: Do we have WebSocket connection?
+        
+        // 📝 TRANSCRIPTION STATUS
+        transcriptionLength: transcription.length,      // Number: How much text we've transcribed so far
+        
+        // 💡 WHAT WE EXPECT:
+        // - isRecording should be true (we're stopping an active recording)
+        // - mediaRecorderState should be "recording" (actively recording)
+        // - hasAudioStream should be true (we have microphone access)
+        // - hasWebSocket should be true (we have active connection)
+        // - transcriptionLength should be > 0 if we spoke during recording
       });
       
       // STEP 1: Stop the MediaRecorder if it's active
@@ -733,10 +828,20 @@ function App() {
         
         // Stop all audio tracks (releases microphone access)
         tracks.forEach((track, index) => {
-          console.log(`🛑 Stopping track ${index}:`, {
-            id: track.id,
-            label: track.label,
-            readyState: track.readyState
+          console.log(`🛑 Stopping audio track ${index} - Releasing microphone:`, {
+            
+            // 🆔 TRACK IDENTIFICATION
+            id: track.id,                     // Unique ID for this audio track
+            label: track.label,               // Human-readable name (e.g., "Built-in Microphone")
+            
+            // 📊 TRACK STATUS BEFORE STOPPING
+            readyState: track.readyState      // String: Should be "live" before we stop it
+            
+            // 💡 WHAT HAPPENS WHEN WE CALL track.stop():
+            // - Microphone access is released (red recording indicator turns off)
+            // - Track readyState changes from "live" to "ended"
+            // - Audio stream stops flowing
+            // - Browser knows we're done with the microphone
           });
           track.stop();
         });
@@ -752,7 +857,7 @@ function App() {
         console.log('🔌 ==================== CLOSING WEBSOCKET ====================');
         console.log('🔌 Closing WebSocket connection...');
         console.log('📊 WebSocket State Before Closing:', {
-          readyState: websocketRef.current.readyState,
+          readyState: websocketRef.current.readyState,          // Numeric readyState (0-3) indicating connection status
           readyStateText: ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][websocketRef.current.readyState],
           url: websocketRef.current.url,
           bufferedAmount: websocketRef.current.bufferedAmount
@@ -850,10 +955,20 @@ function App() {
     setAiSummary(null); // Clear previous summary
     setError(''); // Clear any errors
     
-    // 🔍 DEBUG: Preparing to generate summary
-    console.log('generateSummary called', {
-      summaryType,
-      transcriptionLength: transcription.length,
+    // 🔍 DEBUG: Preparing to generate summary - What we're sending to AI
+    console.log('generateSummary called - Summary generation details:', {
+      
+      // 🤖 AI REQUEST PARAMETERS
+      summaryType,                           // String: Type of summary requested ("meeting", "action_items", etc.)
+      
+      // 📝 INPUT TEXT ANALYSIS
+      transcriptionLength: transcription.length,  // Number: How many characters to analyze
+      
+      // 💡 WHAT HAPPENS NEXT:
+      // - We'll send this transcription text to our Python backend
+      // - Backend forwards it to Google Gemini AI
+      // - AI analyzes the text and generates structured summary
+      // - We receive back summary with key points, action items, etc.
     });
 
     try {
@@ -876,11 +991,22 @@ function App() {
         }),
       });
 
-      console.log('📨 Response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries())
+      console.log('📨 Response received from AI backend - HTTP response details:', {
+        
+        // 📊 HTTP STATUS INFORMATION
+        status: response.status,               // Number: HTTP status code (200 = success, 400+ = error)
+        statusText: response.statusText,       // String: HTTP status message ("OK", "Not Found", etc.)
+        ok: response.ok,                       // Boolean: Was the request successful? (status 200-299)
+        
+        // 📋 RESPONSE HEADERS
+        headers: Object.fromEntries(response.headers.entries()), // Object: All HTTP headers from server
+        
+        // 💡 WHAT THESE MEAN:
+        // - status 200 = Success, AI generated summary
+        // - status 400 = Bad request (invalid input)
+        // - status 500 = Server error (AI service failed)
+        // - ok: true = We can proceed to parse the JSON response
+        // - headers contain metadata about the response (content-type, etc.)
       });
 
       // Check if request was successful
@@ -892,12 +1018,23 @@ function App() {
       // Parse the JSON response from backend
       console.log('📊 Parsing JSON response');
       const summary: AISummary = await response.json();
-      console.log('✅ Summary received and parsed:', {
-        hasSummary: !!summary.summary,
-        hasKeyPoints: !!(summary.key_points && summary.key_points.length > 0),
-        hasActionItems: !!(summary.action_items && summary.action_items.length > 0),
-        hasError: !!summary.error,
-        summaryPreview: summary.summary?.substring(0, 100) + '...'
+      console.log('✅ Summary received and parsed - AI response analysis:', {
+        
+        // 📝 SUMMARY CONTENT ANALYSIS
+        hasSummary: !!summary.summary,         // Boolean: Did AI generate a main summary?
+        hasKeyPoints: !!(summary.key_points && summary.key_points.length > 0),     // Boolean: Are there key points?
+        hasActionItems: !!(summary.action_items && summary.action_items.length > 0), // Boolean: Are there action items?
+        hasError: !!summary.error,             // Boolean: Did AI encounter an error?
+        
+        // 👀 CONTENT PREVIEW
+        summaryPreview: summary.summary?.substring(0, 100) + '...', // String: First 100 chars of summary
+        
+        // 💡 WHAT THIS TELLS US:
+        // - hasSummary: true = AI successfully generated main summary text
+        // - hasKeyPoints: true = AI extracted important points from the conversation
+        // - hasActionItems: true = AI identified tasks or to-dos
+        // - hasError: true = Something went wrong with AI processing
+        // - summaryPreview gives us a quick look at the generated content
       });
       
       console.log('🔄 Setting AI summary state');
@@ -926,11 +1063,23 @@ function App() {
    */
   const clearAll = () => {
     console.log('🧹 clearAll called - resetting application state');
-    console.log('📊 State before clearing:', {
-      transcriptionLength: transcription.length,
-      interimTextLength: interimText.length,
-      hasAiSummary: !!aiSummary,
-      hasError: !!error
+    console.log('📊 State before clearing - What we\'re about to reset:', {
+      
+      // 📝 TEXT CONTENT TO CLEAR
+      transcriptionLength: transcription.length,    // Number: Characters in final transcription
+      interimTextLength: interimText.length,        // Number: Characters in live preview
+      
+      // 🤖 AI CONTENT TO CLEAR
+      hasAiSummary: !!aiSummary,                   // Boolean: Do we have AI summary to clear?
+      
+      // ⚠️ ERROR STATE TO CLEAR
+      hasError: !!error,                           // Boolean: Do we have error message to clear?
+      
+      // 💡 WHAT WILL HAPPEN:
+      // - All text content will be emptied (transcription = "")
+      // - AI summary will be removed (aiSummary = null)
+      // - Error messages will be cleared (error = "")
+      // - App returns to initial "ready to record" state
     });
     
     setTranscription('');     // Clear transcribed text
@@ -957,17 +1106,37 @@ function App() {
    *   - Status indicator
    */
   
-  console.log('🎨 Rendering UI with current state:', {
-    isRecording,
-    connectionStatus,
-    transcriptionLength: transcription.length,
-    interimTextLength: interimText.length,
-    hasError: !!error,
-    hasAiSummary: !!aiSummary,
-    isGeneratingSummary,
-    showSummarySection: !!(aiSummary || isGeneratingSummary),
-    clearButtonDisabled: !transcription && !aiSummary,
-    recordButtonDisabled: connectionStatus === 'Connection Error'
+  console.log('🎨 Rendering UI with current state - What the user will see:', {
+    
+    // 🎤 RECORDING STATE (affects main button)
+    isRecording,                           // Boolean: Controls button text ("Start" vs "Stop")
+    
+    // 🔗 CONNECTION STATE (affects button availability)
+    connectionStatus,                      // String: Shown in status area
+    
+    // 📝 TEXT CONTENT STATE (affects text display)
+    transcriptionLength: transcription.length,    // Number: Characters in main text box
+    interimTextLength: interimText.length,        // Number: Characters in live preview
+    
+    // ⚠️ ERROR STATE (affects error message display)
+    hasError: !!error,                     // Boolean: Should we show error message?
+    
+    // 🤖 AI SUMMARY STATE (affects summary section)
+    hasAiSummary: !!aiSummary,            // Boolean: Do we have AI results to show?
+    isGeneratingSummary,                   // Boolean: Should we show loading spinner?
+    
+    // 🎛️ UI CONTROL LOGIC (affects button states)
+    showSummarySection: !!(aiSummary || isGeneratingSummary),  // Boolean: Show summary section?
+    clearButtonDisabled: !transcription && !aiSummary,        // Boolean: Is clear button disabled?
+    recordButtonDisabled: connectionStatus === 'Connection Error', // Boolean: Is record button disabled?
+    
+    // 💡 HOW THESE AFFECT THE UI:
+    // - isRecording changes button from "Start Recording" to "Stop & Summarize"
+    // - connectionStatus shows in status area ("Connected", "Disconnected", etc.)
+    // - transcription/interim text fill the main text display box
+    // - hasError shows red error message below controls
+    // - AI summary states control the summary section visibility and content
+    // - Button disabled states prevent user interaction when not ready
   });
 
   return (
