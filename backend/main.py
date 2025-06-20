@@ -8,6 +8,8 @@
 import asyncio
 # json - converts Python objects to/from JSON format for web communication
 import json
+# logging - provides professional logging capabilities instead of print statements
+import logging
 # os - lets us access environment variables and system settings
 import os
 # typing - helps with type hints to make code clearer and catch bugs
@@ -60,6 +62,21 @@ def setup_ssl():
 
 # Call the SSL setup function immediately when the server starts
 setup_ssl()
+
+# 📝 CONFIGURE LOGGING SYSTEM
+# Set up professional logging with proper formatting and levels
+logging.basicConfig(
+    level=logging.DEBUG,  # Set to DEBUG for more detailed logs, INFO for normal operation
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # Output to console
+        # Uncomment below to also log to file:
+        # logging.FileHandler('ai_note_taker.log')
+    ]
+)
+
+# Create a logger specifically for our AI processing
+logger = logging.getLogger('AINoteTaker')
 
 # 🌍 LOAD ENVIRONMENT VARIABLES
 # Environment variables store secret keys and configuration
@@ -129,7 +146,7 @@ class TranscriptionManager:
             # If no API key found, raise an error - we can't work without it
             raise ValueError("DEEPGRAM_API_KEY not found in environment variables")
         
-        # Create Deepgram client - this is our connection to Deepgram's AI service
+        # Create Deepgram client - this is our connection to Deepgram's AP service
         self.deepgram = DeepgramClient(self.api_key)
         
         # Initialize instance variables (these belong to each specific instance)
@@ -197,12 +214,16 @@ class TranscriptionManager:
             # This creates a persistent connection to Deepgram's servers
             self.connection = self.deepgram.listen.live.v("1")  # Version 1 of the live API
             
-            # 📡 SET UP EVENT HANDLERS
-            # These functions will be called when specific events happen
-            self.connection.on(LiveTranscriptionEvents.Open, self.on_open)        # When connection opens
-            self.connection.on(LiveTranscriptionEvents.Transcript, self.on_message)  # When we get transcription
-            self.connection.on(LiveTranscriptionEvents.Error, self.on_error)      # When there's an error
-            self.connection.on(LiveTranscriptionEvents.Close, self.on_close)      # When connection closes
+            # 📡 SET UP EVENT HANDLERS (callbacks)
+            # Deepgram will invoke these methods automatically from its own thread.
+            # 1️⃣ Open       → self.on_open()      – fires once the WebSocket handshake succeeds.
+            # 2️⃣ Transcript  → self.on_message()   – fires every time Deepgram sends a (partial or final) transcript.
+            # 3️⃣ Error      → self.on_error()     – fires if Deepgram reports any problem during streaming.
+            # 4️⃣ Close      → self.on_close()     – fires when the WebSocket closes, either normally or due to an error.
+            self.connection.on(LiveTranscriptionEvents.Open, self.on_open)
+            self.connection.on(LiveTranscriptionEvents.Transcript, self.on_message)
+            self.connection.on(LiveTranscriptionEvents.Error, self.on_error)
+            self.connection.on(LiveTranscriptionEvents.Close, self.on_close)
             
             # 🚀 START THE CONNECTION
             # FIXED: Don't await the start method - it returns a boolean, not a coroutine
@@ -432,16 +453,16 @@ class TranscriptionManager:
 # This class handles all AI-related functionality (generating summaries)
 class AIProcessor:
     """
-    This class handles AI processing using Google's Gemini AI
+    This class handles AI processing using Google's Gemini API
     It takes transcribed text and generates intelligent summaries
     """
     
     @staticmethod
     def _clean_json_response(response: str) -> str:
         """
-        Clean AI response to extract pure JSON
+        Clean Gemini API response to extract pure JSON
         
-        Sometimes AI models return JSON wrapped in markdown code blocks like:
+        Sometimes Gemini API returns JSON wrapped in markdown code blocks like:
         ```json
         {"key": "value"}
         ```
@@ -449,7 +470,7 @@ class AIProcessor:
         This method removes the markdown formatting and extracts just the JSON.
         
         Args:
-            response: Raw AI response that might contain markdown formatting
+            response: Raw Gemini API response that might contain markdown formatting
             
         Returns:
             Clean JSON string ready for parsing
@@ -467,14 +488,17 @@ class AIProcessor:
             cleaned = cleaned[3:-3]  # Remove first 3 chars (```) and last 3 chars (```)
             cleaned = cleaned.strip()
         
+        # Log for better understanding of output
+        logger.debug(f"[_clean_json_response] Raw response:\n{response}")
+        logger.debug(f"[_clean_json_response] Cleaned response:\n{cleaned}")
         return cleaned
     
     @staticmethod
     async def generate_summary(text: str, summary_type: str = "meeting") -> Dict[str, Any]:
         """
-        Generate AI summary using Google Gemini
+        Generate Gemini API summary using Google Gemini
         
-        This method takes transcribed text and uses AI to create:
+        This method takes transcribed text and uses Gemini API to create:
         - Overall summary
         - Key points
         - Action items
@@ -486,18 +510,47 @@ class AIProcessor:
             summary_type: Type of summary to generate ("meeting", "action_items", etc.)
         
         Returns:
-            Dictionary containing the AI-generated summary and analysis
+            Dictionary containing the Gemini API-generated summary and analysis
         """
+        logger.info("="*50)
+        logger.info("🤖 [GENERATE_SUMMARY] Starting Gemini API summary generation...")
+        logger.info("="*50)
+        
         try:
-            # Check if we have Gemini configured
+            # 🔑 Log input parameters for debugging
+            logger.info("📥 [INPUT] Function called with parameters:")
+            logger.debug(f"   📝 text parameter type: {type(text)}")
+            logger.info(f"   📝 text length: {len(text)} characters")
+            logger.info(f"   📝 summary_type: '{summary_type}'")
+            logger.debug(f"   📝 summary_type type: {type(summary_type)}")
+            
+            # Show a preview of the text (first 150 characters)
+            preview_text = text[:150] + ("..." if len(text) > 150 else "")
+            logger.debug(f"   📖 text preview: '{preview_text}'")
+            
+            # 🔐 Check if we have Gemini configured
+            logger.info("🔐 [CONFIG] Checking API configuration...")
+            gemini_key_exists = bool(GEMINI_API_KEY)
+            logger.info(f"   🔑 GEMINI_API_KEY exists: {gemini_key_exists}")
+            if GEMINI_API_KEY:
+                # Show only first 10 characters of API key for security
+                key_preview = GEMINI_API_KEY[:10] + "..." if len(GEMINI_API_KEY) > 10 else GEMINI_API_KEY
+                logger.debug(f"   🔑 API key preview: '{key_preview}'")
+            
             if not GEMINI_API_KEY:
-                return {
+                error_response = {
                     "error": "Gemini AI not configured. Please add GEMINI_API_KEY to your environment variables."
                 }
+                logger.error(f"❌ [ERROR] No API key found, returning: {error_response}")
+                return error_response
+
+            # 📝 CREATE GEMINI API PROMPT BASED ON SUMMARY TYPE
+            logger.info("📝 [PROMPT] Creating Gemini API prompt based on summary type...")
+            logger.info(f"   🎯 Summary type received: '{summary_type}'")
             
-            # 📝 CREATE AI PROMPT BASED ON SUMMARY TYPE
             # Different prompts for different types of analysis
             if summary_type == "action_items":
+                logger.info("   📋 Using ACTION_ITEMS prompt template")
                 # Focus on tasks and to-dos
                 prompt = f"""
                 Analyze this transcription and extract action items, tasks, and to-dos:
@@ -510,6 +563,7 @@ class AIProcessor:
                 """
                 
             elif summary_type == "key_points":
+                logger.info("   🔑 Using KEY_POINTS prompt template")
                 # Focus on main takeaways
                 prompt = f"""
                 Analyze this transcription and extract the key points and main takeaways:
@@ -522,6 +576,7 @@ class AIProcessor:
                 """
                 
             elif summary_type == "speaker_analysis":
+                logger.info("   👥 Using SPEAKER_ANALYSIS prompt template")
                 # Focus on what each speaker contributed
                 prompt = f"""
                 Analyze this transcription and provide per-speaker analysis:
@@ -534,6 +589,7 @@ class AIProcessor:
                 """
                 
             else:
+                logger.info("   📊 Using DEFAULT MEETING prompt template")
                 # Default comprehensive meeting summary
                 prompt = f"""
                 Analyze this meeting transcription and provide a comprehensive summary:
@@ -550,45 +606,94 @@ class AIProcessor:
                 Make sure the response is valid JSON format.
                 """
             
-            # 🤖 SEND REQUEST TO GEMINI AI
-            # Generate content using the AI model
+            # Log prompt information for debugging
+            prompt_length = len(prompt)
+            logger.info(f"   📏 Generated prompt length: {prompt_length} characters")
+            # Show first 200 characters of prompt (without the full text to avoid spam)
+            prompt_start = prompt.split("Text: {text}")[0] if "Text: {text}" in prompt else prompt[:200]
+            prompt_preview = prompt_start[:200] + ("..." if len(prompt_start) > 200 else "")
+            logger.debug(f"   📖 Prompt preview (without full text): '{prompt_preview}'")
+            
+            # 🤖 SEND REQUEST TO GEMINI API
+            logger.info("🤖 [GEMINI_REQUEST] Sending request to Gemini API...")
+            logger.debug(f"   🔗 Using model: {model}")
+            logger.info("   📤 Sending prompt to Gemini API (this may take a few seconds)...")
+            
+            # Generate content using the Gemini API model
             response = model.generate_content(prompt)
+            logger.info("   ✅ Received response from Gemini API")
             
             # Extract the text response from Gemini
             ai_response = response.text
+            logger.info("📨 [GEMINI_RESPONSE] Processing Gemini API response...")
+            logger.info(f"   📏 Raw response length: {len(ai_response)} characters")
+            logger.debug(f"   🔤 Response type: {type(ai_response)}")
+            
+            # Show first 300 characters of response for debugging
+            response_preview = ai_response[:300] + ("..." if len(ai_response) > 300 else "")
+            logger.debug(f"   📖 Raw response preview:\n'{response_preview}'")
             
             # 🔍 TRY TO PARSE AS JSON
+            logger.info("🔍 [JSON_PARSING] Attempting to parse response as JSON...")
             # The AI should return JSON, but sometimes it includes extra text or markdown formatting
             try:
                 # Clean the AI response to extract pure JSON
+                logger.debug("   🧹 Cleaning response with _clean_json_response()...")
                 cleaned_response = AIProcessor._clean_json_response(ai_response)
+                logger.debug(f"   📏 Cleaned response length: {len(cleaned_response)} characters")
+                
+                # Show preview of cleaned response
+                cleaned_preview = cleaned_response[:200] + ("..." if len(cleaned_response) > 200 else "")
+                logger.debug(f"   📖 Cleaned response preview:\n'{cleaned_preview}'")
                 
                 # Try to parse the cleaned response as JSON
+                logger.debug("   🔧 Attempting json.loads()...")
                 summary_data = json.loads(cleaned_response)
+                logger.info("   ✅ JSON parsing successful!")
+                logger.debug(f"   📊 Parsed data type: {type(summary_data)}")
+                
+                if isinstance(summary_data, dict):
+                    logger.debug(f"   🔑 Dictionary keys found: {list(summary_data.keys())}")
                 
                 # Add metadata about the response
+                logger.debug("   📝 Adding metadata to response...")
                 summary_data["type"] = summary_type
                 summary_data["raw_response"] = ai_response
                 
+                logger.info("   📤 Returning processed summary data")
                 return summary_data
                 
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as json_error:
                 # If JSON parsing fails, return the raw response
-                print(f"Failed to parse AI response as JSON: {ai_response}")
-                return {
+                logger.warning(f"   ❌ JSON parsing failed: {json_error}")
+                logger.debug(f"   📄 Problematic text: '{ai_response[:100]}...'")
+                
+                error_response = {
                     "summary": "AI generated a response but it wasn't in the expected format.",
                     "raw_response": ai_response,
                     "type": summary_type,
-                    "error": "Response format error - see raw_response for actual AI output"
+                    "error": "Response format error - see raw_response for actual AI output",
+                    "json_error": str(json_error)
                 }
+                logger.warning(f"   📤 Returning JSON error response")
+                return error_response
                 
         except Exception as e:
             # Handle any errors that occur during AI processing
-            print(f"Error generating summary: {e}")
-            return {
+            logger.error("❌ [EXCEPTION] Unexpected error in generate_summary:")
+            logger.error(f"   🚨 Error type: {type(e).__name__}")
+            logger.error(f"   📝 Error message: {str(e)}")
+            logger.error(f"   📊 Summary type that was being processed: '{summary_type}'")
+            logger.error(f"   📏 Text length when error occurred: {len(text) if 'text' in locals() else 'unknown'}")
+            
+            error_response = {
                 "error": f"Failed to generate summary: {str(e)}",
-                "type": summary_type
+                "type": summary_type,
+                "error_type": type(e).__name__
             }
+            logger.error(f"   📤 Returning error response")
+            logger.info("="*50)
+            return error_response
 
 # 🌐 API ENDPOINTS
 # These are the different ways our React frontend can communicate with this backend
