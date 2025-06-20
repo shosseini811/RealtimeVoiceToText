@@ -167,7 +167,7 @@ class TranscriptionManager:
             # LiveOptions configures how Deepgram processes our audio
             options = LiveOptions(
                 # 🎯 CORE MODEL CONFIGURATION
-                model="nova-2",        # Deepgram's newest and most accurate model
+                model="nova-3",        # Deepgram's newest and most accurate model
                 language="en-US",      # English (United States)
                 
                 # 🎤 DIARIZATION - Speaker identification 
