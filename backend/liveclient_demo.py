@@ -78,6 +78,19 @@ class LiveClientDemo:
         self.connection = None
         self.is_connected = False
         
+        # You can verify this yourself:
+        print(f"Type of self.deepgram: {type(self.deepgram)}")
+        # Output: <class 'deepgram.client.DeepgramClient'>
+
+        print(f"Type of self.deepgram.listen: {type(self.deepgram.listen)}")  
+        # Output: <class 'deepgram.clients.listen.Listen'>
+
+        print(f"Type of self.deepgram.listen.live: {type(self.deepgram.listen.live)}")
+        # Output: <class 'deepgram.clients.listen.Listen.Version'>
+
+        print(f"Type of self.deepgram.listen.live.v('1'): {type(self.deepgram.listen.live.v('1'))}")
+        # Output: <class 'deepgram.clients.live.v1.client.LiveClient'>
+        
     def create_live_client(self):
         """
         STEP 1: Create a LiveClient object
@@ -89,6 +102,29 @@ class LiveClientDemo:
         print("-" * 30)
         
         # This is the line you asked about!
+        # Let's break down why we don't need parentheses:
+        # 
+        # self.deepgram                    → DeepgramClient object (instance)
+        # self.deepgram.listen             → @property (no parentheses needed!)
+        # self.deepgram.listen.live        → @property (no parentheses needed!)  
+        # self.deepgram.listen.live.v("1") → method call (parentheses required!)
+        #
+        # WHY NO PARENTHESES for .listen and .live?
+        # Because they use @property decorator in the Deepgram SDK:
+        #
+        # @property
+        # def listen(self):
+        #     return Listen(self.config)
+        #
+        # @property  
+        # def live(self):
+        #     return Version(self.config, "live")
+        #
+        # Properties act like attributes, so you access them without ()
+        # Only the final .v("1") needs () because it's a regular method
+        #
+        # This creates the clean, fluent interface: self.deepgram.listen.live.v("1") 
+        # instead of the more verbose self.deepgram.listen().live().v("1") 🚀
         self.connection = self.deepgram.listen.live.v("1")
         
         print(f"✅ LiveClient created: {self.connection}")
