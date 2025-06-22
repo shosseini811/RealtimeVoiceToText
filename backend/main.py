@@ -949,6 +949,7 @@ if __name__ == "__main__":
     this code starts the web server and makes it available at http://localhost:8000
     """
     import uvicorn
+    import sys
     
     print("🚀 Starting AI Note Taker API server...")
     print("📡 WebSocket endpoint: ws://localhost:8000/ws")
@@ -956,8 +957,13 @@ if __name__ == "__main__":
     print("📚 API Documentation: http://localhost:8000/docs")
     print("🏥 Health Check: http://localhost:8000/api/health")
     
-    # Start the server
-    # host="0.0.0.0" means accept connections from any IP address
-    # port=8000 means the server runs on port 8000
-    # reload=True means the server restarts automatically when we change code (development only)
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True) 
+    # Check if we're running in debug mode
+    # In debug mode, we don't want uvicorn.run() to take control
+    if hasattr(sys, 'gettrace') and sys.gettrace() is not None:
+        print("🐛 Debug mode detected - server ready for debugging")
+        print("💡 Set breakpoints and use the debugger controls")
+        # Don't call uvicorn.run() in debug mode
+        # The debugger will handle running the app
+    else:
+        # Normal mode - start the server
+        uvicorn.run(app, host="0.0.0.0", port=8000, reload=True) 
