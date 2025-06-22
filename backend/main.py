@@ -148,6 +148,7 @@ class TranscriptionManager:
         
         # Create Deepgram client - this is our connection to Deepgram's AP service
         self.deepgram = DeepgramClient(self.api_key)
+        print(f"🔗 [ASYNC] Deepgram client created: {self.deepgram}")
         
         # Initialize instance variables (these belong to each specific instance)
         self.connection = None          # Will hold our live transcription connection
