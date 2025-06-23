@@ -323,6 +323,7 @@ function App() {
         console.log('✅ WebSocket object created');
         console.log('📊 Initial WebSocket state:', {
           readyState: ws.readyState,
+          // Convert numeric readyState (0,1,2,3) to human-readable text using array index lookup
           readyStateText: ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][ws.readyState],
           url: ws.url,
           protocol: ws.protocol,
@@ -366,6 +367,7 @@ function App() {
         ws.onmessage = (event) => {
           console.log('📨 ==================== WEBSOCKET MESSAGE RECEIVED ====================');
           console.log('📨 WebSocket message received from server!');
+          // event contains: data (JSON string from server), target (WebSocket), origin (server URL), timeStamp
           console.log('📊 Raw Message Details:', {
             dataType: typeof event.data,
             dataSize: event.data.length,

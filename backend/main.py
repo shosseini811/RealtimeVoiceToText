@@ -427,7 +427,7 @@ class TranscriptionManager:
         """
         try:
             # Only send if we have a connection and it's active
-            if self.connection and self.is_connected:
+            if self.connection and self.is_connected:  # ← SAFETY CHECK!
                 self.connection.send(audio_data)  # Send raw audio bytes to Deepgram
         except Exception as e:
             print(f"Error sending audio: {e}")
@@ -717,12 +717,20 @@ async def websocket_endpoint(websocket: WebSocket):
     4. Backend forwards audio to Deepgram and sends transcription back
     5. Connection stays open until user stops recording
     """
+    # 🔍 DEBUG: CHECK INITIAL WEBSOCKET STATE
+    print(f"🔍 [DEBUG] Initial WebSocket state: {websocket.client_state}")  # Should be CONNECTING
+    print(f"🔍 [DEBUG] Initial application state: {websocket.application_state}")  # Should be CONNECTING
+    
     # 🤝 ACCEPT THE WEBSOCKET CONNECTION
     # This tells the frontend "Yes, I'm ready to communicate"
     # Send the 101 Switching Protocols response to complete the WebSocket handshake.
     # After this coroutine completes, the connection state becomes "OPEN" and both
     # client and server can freely exchange WebSocket frames.
     await websocket.accept()
+    
+    # 🔍 DEBUG: CHECK WEBSOCKET STATE AFTER ACCEPT
+    print(f"🔍 [DEBUG] After accept - WebSocket state: {websocket.client_state}")  # Should be CONNECTED
+    print(f"🔍 [DEBUG] After accept - application state: {websocket.application_state}")  # Should be CONNECTED
     
     # Initialize variables to track our connections
     # Placeholders that will be populated once the handshake succeeds:
@@ -738,7 +746,15 @@ async def websocket_endpoint(websocket: WebSocket):
         # This keeps concurrent browser sessions isolated from each other.
         print(f"🏗️ [WEBSOCKET] Creating new TranscriptionManager for WebSocket {id(websocket)}")
         transcription_manager = TranscriptionManager()
+        
+        # 🔍 DEBUG: CHECK DEEPGRAM STATE BEFORE START
+        print(f"🔍 [DEBUG] Deepgram connected (before start): {transcription_manager.is_connected}")  # Should be False
+        
         success = await transcription_manager.start_transcription(websocket)
+        
+        # 🔍 DEBUG: CHECK DEEPGRAM STATE AFTER START
+        print(f"🔍 [DEBUG] Deepgram connected (after start): {transcription_manager.is_connected}")  # Should be True if successful
+        print(f"🔍 [DEBUG] Start transcription success: {success}")  # Should be True if successful
         
         # Check if Deepgram connection was successful
         if not success:
