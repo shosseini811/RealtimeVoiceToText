@@ -6,22 +6,32 @@
 // useRef: Hook for accessing DOM elements or storing mutable values
 import React, { useState, useEffect, useRef } from 'react';
 
+// React Router - for navigation between pages
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 // Lucide React - beautiful icons for our buttons
 // Mic: Microphone icon for recording state
 // MicOff: Microphone off icon for stopped state
-import { Mic, MicOff } from 'lucide-react';
+// LogOut: Logout icon for user menu
+import { Mic, MicOff, LogOut, User } from 'lucide-react';
 
 // Our custom CSS styles for making the app look good
 import './App.css';
+import './Auth.css';
 
 // TypeScript type definitions - these help prevent bugs by defining data shapes
 // These interfaces define the structure of data we expect to receive/send
 import { TranscriptionMessage, AISummary, ConnectionStatus, SummaryType } from './types';
 
+// Authentication components and context
+import { AuthProvider, useAuth } from './AuthContext';
+import Login from './components/Login';
+import Signup from './components/Signup';
+
 /**
- * 🎤 MAIN APP COMPONENT
+ * 🎤 VOICE RECORDER COMPONENT
  * 
- * This is the main React component that handles:
+ * This component handles the voice recording functionality:
  * - Recording audio from the user's microphone
  * - Sending audio data to the backend via WebSocket
  * - Receiving real-time transcription from Deepgram
@@ -36,8 +46,12 @@ import { TranscriptionMessage, AISummary, ConnectionStatus, SummaryType } from '
  * 5. User clicks "Stop & Summarize"
  * 6. App automatically generates AI summary
  */
-function App() {
-  console.log('🚀 App component rendering/re-rendering');
+function VoiceRecorder() {
+  console.log('🚀 VoiceRecorder component rendering/re-rendering');
+
+  // 🔐 GET AUTHENTICATION CONTEXT
+  // Get user info and logout function from auth context
+  const { user, logout } = useAuth();
 
   // 🔄 STATE MANAGEMENT
   // React hooks for managing component state - these variables can change and trigger re-renders
@@ -1144,9 +1158,24 @@ function App() {
   return (
     <div className="simple-app">
       
-      {/* 🏠 SIMPLE HEADER */}
+      {/* 🏠 SIMPLE HEADER WITH USER INFO */}
       <div className="simple-header">
         <h1>🎤 Voice to Text</h1>
+        {/* 👤 USER INFO AND LOGOUT */}
+        <div className="user-info">
+          <div className="user-details">
+            <User size={20} />
+            <span>{user?.email}</span>
+          </div>
+          <button 
+            className="logout-btn"
+            onClick={logout}
+            title="Logout"
+          >
+            <LogOut size={20} />
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* 📱 MAIN CONTENT CONTAINER */}
@@ -1297,6 +1326,84 @@ function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * 🔐 PROTECTED ROUTE COMPONENT
+ * 
+ * This component checks if the user is authenticated before showing the voice recorder.
+ * If not authenticated, it redirects to the login page.
+ */
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  console.log('🔐 ProtectedRoute - Auth state:', { isAuthenticated, isLoading });
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h1>🎤 Voice to Text</h1>
+            <p>Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    console.log('🔐 User not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
+
+  // Show protected content if authenticated
+  console.log('🔐 User authenticated, showing protected content');
+  return <>{children}</>;
+}
+
+/**
+ * 🚀 MAIN APP COMPONENT WITH ROUTING
+ * 
+ * This is the root component that sets up routing and authentication.
+ * It provides different routes for login, signup, and the main voice recorder.
+ * 
+ * ROUTES:
+ * - /login: Login page for existing users
+ * - /signup: Registration page for new users  
+ * - /: Main voice recorder (protected, requires authentication)
+ */
+function App() {
+  console.log('🚀 Main App component rendering');
+
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* 🔑 LOGIN ROUTE */}
+          <Route path="/login" element={<Login />} />
+          
+          {/* 📝 SIGNUP ROUTE */}
+          <Route path="/signup" element={<Signup />} />
+          
+          {/* 🎤 PROTECTED VOICE RECORDER ROUTE */}
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <VoiceRecorder />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* 🔄 REDIRECT ANY OTHER ROUTES TO HOME */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

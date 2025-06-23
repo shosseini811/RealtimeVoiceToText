@@ -78,4 +78,36 @@ google-generativeai==0.3.2
 # - Provides clear error messages for invalid data
 # - Essential for FastAPI's automatic API documentation
 # - Version 2.5.0 includes performance improvements
-pydantic==2.5.0 
+pydantic==2.5.0
+
+# 🔐 AUTHENTICATION AND SECURITY
+# PassLib: Password hashing and verification library
+# - Securely hashes passwords using bcrypt algorithm
+# - Prevents storing plain text passwords in database
+# - Includes password strength validation
+# - Industry standard for Python authentication
+passlib[bcrypt]==1.7.4
+
+# 🎫 JWT TOKEN MANAGEMENT
+# PyJWT: JSON Web Token implementation for Python
+# - Creates and verifies authentication tokens
+# - Stateless authentication (no server-side sessions)
+# - Includes expiration and security features
+# - Standard for modern web authentication
+PyJWT==2.8.0
+
+# 🗄️ DATABASE ORM
+# SQLAlchemy: Python SQL toolkit and Object-Relational Mapping
+# - Provides database abstraction layer
+# - Supports multiple database backends (SQLite, PostgreSQL, MySQL)
+# - Includes migration support and relationship management
+# - Industry standard ORM for Python applications
+sqlalchemy==2.0.23
+
+# 📊 DATABASE DRIVER
+# aiosqlite: Async SQLite driver for SQLAlchemy
+# - Enables async database operations with SQLite
+# - Perfect for development and small applications
+# - No additional database server setup required
+# - Can be easily switched to PostgreSQL for production
+aiosqlite==0.19.0 

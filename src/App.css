@@ -97,18 +97,60 @@ body {
    - justify-content: center would center vertically (not used here)
 */
 
-/* HEADER SECTION - app title area */
+/* HEADER SECTION - app title area with user info */
 .simple-header {
-  text-align: center;     /* Center the text */
+  display: flex;          /* Use flexbox for layout */
+  justify-content: space-between; /* Space items apart */
+  align-items: center;    /* Center items vertically */
   margin-bottom: 2rem;    /* Space below the header */
+  width: 100%;            /* Full width */
+  max-width: 800px;       /* Match main content width */
 }
 
 /* MAIN HEADING - the big title */
 .simple-header h1 {
   font-size: 2.5rem;      /* Large text size (rem = relative to root font size) */
   color: white;           /* White text color */
-  margin-bottom: 0.5rem;  /* Small space below title */
+  margin: 0;              /* Remove default margins */
   font-weight: 700;       /* Bold text (700 = bold, 400 = normal) */
+  flex: 1;                /* Take up available space */
+  text-align: center;     /* Center the title */
+}
+
+/* USER INFO CONTAINER */
+.user-info {
+  display: flex;          /* Use flexbox for layout */
+  align-items: center;    /* Center items vertically */
+  gap: 15px;              /* Space between user details and logout button */
+}
+
+/* USER DETAILS (email and icon) */
+.user-details {
+  display: flex;          /* Use flexbox for layout */
+  align-items: center;    /* Center items vertically */
+  gap: 8px;               /* Space between icon and email */
+  font-size: 14px;        /* Smaller text size */
+  color: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+}
+
+/* LOGOUT BUTTON */
+.logout-btn {
+  display: flex;          /* Use flexbox for layout */
+  align-items: center;    /* Center items vertically */
+  gap: 6px;               /* Space between icon and text */
+  background: rgba(255, 255, 255, 0.1); /* Semi-transparent white background */
+  color: white;           /* White text */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Semi-transparent border */
+  padding: 8px 12px;      /* Inner spacing */
+  border-radius: 6px;     /* Rounded corners */
+  font-size: 14px;        /* Text size */
+  cursor: pointer;        /* Pointer cursor on hover */
+  transition: all 0.2s ease; /* Smooth transitions */
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.2); /* Slightly more opaque on hover */
+  border-color: rgba(255, 255, 255, 0.3); /* More visible border */
 }
 
 /* MAIN CONTENT CONTAINER - the white card that holds everything */

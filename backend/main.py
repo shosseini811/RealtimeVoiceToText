@@ -90,6 +90,12 @@ app = FastAPI(
     description="Real-time transcription with AI-powered summaries"  # Description for docs
 )
 
+# 🔐 IMPORT AUTHENTICATION MODULE
+from auth import router as auth_router
+
+# 📝 INCLUDE AUTHENTICATION ROUTES
+app.include_router(auth_router)
+
 # 🔗 ADD CORS MIDDLEWARE
 # CORS (Cross-Origin Resource Sharing) allows our React frontend to talk to this backend
 # Without this, browsers would block the connection for security reasons

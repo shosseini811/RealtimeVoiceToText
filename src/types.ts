@@ -171,6 +171,110 @@ export type ConnectionStatus =
   | 'Connection Error';            // Connection failed or error occurred
 
 /**
+ * 🔐 USER AUTHENTICATION INTERFACES
+ * 
+ * These interfaces define the structure for user authentication data.
+ * They help ensure type safety when handling login, signup, and user data.
+ */
+
+/**
+ * 👤 USER INTERFACE
+ * 
+ * Represents a user in our system.
+ * Contains basic user information without sensitive data like passwords.
+ * 
+ * EXAMPLE:
+ * {
+ *   id: 1,
+ *   email: "john@example.com",
+ *   created_at: "2024-01-15T10:30:00Z"
+ * }
+ */
+export interface User {
+  id: number;                      // Unique user identifier (database primary key)
+  email: string;                   // User's email address (used for login)
+  created_at: string;              // When the user account was created (ISO date string)
+}
+
+/**
+ * 📝 LOGIN REQUEST INTERFACE
+ * 
+ * Data structure for login requests from the frontend.
+ * Contains the credentials the user enters in the login form.
+ * 
+ * EXAMPLE:
+ * {
+ *   email: "john@example.com",
+ *   password: "securePassword123"
+ * }
+ */
+export interface LoginRequest {
+  email: string;                   // User's email address
+  password: string;                // User's password (will be hashed on backend)
+}
+
+/**
+ * 📝 SIGNUP REQUEST INTERFACE
+ * 
+ * Data structure for user registration requests.
+ * Contains the information needed to create a new user account.
+ * 
+ * EXAMPLE:
+ * {
+ *   email: "john@example.com",
+ *   password: "securePassword123",
+ *   confirmPassword: "securePassword123"
+ * }
+ */
+export interface SignupRequest {
+  email: string;                   // User's email address
+  password: string;                // User's chosen password
+  confirmPassword: string;         // Password confirmation (must match password)
+}
+
+/**
+ * 🎫 AUTH RESPONSE INTERFACE
+ * 
+ * Response structure from login/signup endpoints.
+ * Contains the authentication token and user information.
+ * 
+ * EXAMPLE:
+ * {
+ *   access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+ *   token_type: "bearer",
+ *   user: { id: 1, email: "john@example.com", created_at: "2024-01-15T10:30:00Z" }
+ * }
+ */
+export interface AuthResponse {
+  access_token: string;            // JWT token for authenticated requests
+  token_type: string;              // Token type (usually "bearer")
+  user: User;                      // User information
+}
+
+/**
+ * 🔐 AUTH STATE INTERFACE
+ * 
+ * Represents the authentication state in our React application.
+ * Tracks whether user is logged in, their info, and loading states.
+ * 
+ * EXAMPLE:
+ * {
+ *   isAuthenticated: true,
+ *   user: { id: 1, email: "john@example.com", created_at: "2024-01-15T10:30:00Z" },
+ *   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+ *   isLoading: false,
+ *   error: null
+ * }
+ */
+export interface AuthState {
+  isAuthenticated: boolean;        // Whether user is currently logged in
+  user: User | null;               // User information (null if not logged in)
+  token: string | null;            // JWT token (null if not logged in)
+  isLoading: boolean;              // Whether auth operation is in progress
+  error: string | null;            // Error message (null if no error)
+}
+
+/**
  * 📊 SUMMARY TYPE
  * 
  * Defines the different types of AI summaries we can request.
